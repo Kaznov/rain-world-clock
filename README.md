@@ -1,12 +1,10 @@
-# Rain World Clock
+<img src="https://raw.githubusercontent.com/Kaznov/rain-world-clock/main/extras/clock_logo.png" alt="Rain World Clock" width="25%"/>
 
 **Rain World Clock** is a digital clock inspired by [Rain World](http://rainworldgame.com/) game. 
 
 Based on E-Ink paper display and ESP-8266 MCU, using the Internet connection to keep the current time, date and timezone.
 
 It is a fan project, not affiliated with VideoCult.
-
-# Final product
 
 # Features
 - A different picture based on the day of the week / time of the day / special events,
@@ -24,7 +22,7 @@ It is a fan project, not affiliated with VideoCult.
 
 **It's easy!**\*
 
-<sub>\*It's not that hard</sub>
+<sup>\*It's not that hard</sup>
 
 You will need:
 
@@ -62,7 +60,7 @@ I'd like to thank all the artists that agreed to use their work. You can find th
 
 Great thanks to:
 - [Pansear Doodles](https://pansear-doodles.tumblr.com/)
-- [@Rouughnix](ttps://twitter.com/Rouughnix)
+- [@Rouughnix](https://twitter.com/Rouughnix)
 - [Valkyrie Gaming](https://www.youtube.com/@ignitedvalkyrie)
 
 And of course, great thanks to VideoCult for making this amazing game. If you haven't played Rain World, and you like survival platformers with deep hidden lore - you should [give it a try](https://store.steampowered.com/app/312520/Rain_World/)!
