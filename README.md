@@ -6,6 +6,18 @@ Based on E-Ink paper display and ESP-8266 MCU, using the Internet connection to 
 
 It is a fan project, not affiliated with VideoCult.
 
+# What does it look like?
+
+<img src="https://github.com/Kaznov/rain-world-clock/blob/7323987388d90102a4ff2476587c8fb4c78ac734/extras/picture_artificial_light.jpg" alt="Picture - artificial light" width="70%"/>
+
+<img src="https://github.com/Kaznov/rain-world-clock/blob/7323987388d90102a4ff2476587c8fb4c78ac734/extras/picture_natural_light.jpg" alt="Picture - natural light" width="70%"/>
+
+12 big, outer circles deplete as the 12h cycle runs out.
+
+60 small, inner circles deplete as the 1h cycle runs out.
+
+In the pictures, the time shown is 10:44 and 5:00 respectively 
+
 # Features
 - A different picture based on the day of the week / time of the day / special events,
 - Keeping the time using WiFi connection,
