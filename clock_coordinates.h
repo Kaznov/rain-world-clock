@@ -3,7 +3,6 @@
 
 #include <array>
 #include <cmath>
-#include <numbers>
 
 #include "display.h"
 
@@ -13,10 +12,10 @@ struct Position {
 };
 
 template <std::size_t N>
-consteval std::array<Position, N> get_positions_on_circle(short r, short x0 = 0, short y0 = 0) {
+constexpr std::array<Position, N> get_positions_on_circle(short r, short x0 = 0, short y0 = 0) {
     static_assert(N%4 == 0);
     constexpr std::size_t qN = N / 4;
-    constexpr double pi = std::numbers::pi;
+    constexpr double pi = 3.14159265358979323846;
 
     short dx[N]{};
     short dy[N]{};
@@ -35,15 +34,13 @@ consteval std::array<Position, N> get_positions_on_circle(short r, short x0 = 0,
         dy[i] = dx[i - qN];
     }
 
-    std::array<Position, N> result;
-    result.fill(Position{x0, y0});
-
+    std::array<Position, N> result{};
     for (std::size_t i = 0; i < N; ++i) {
-        result[i].x += dx[i];
-        result[i].y += dy[i];
+        short x = x0 + dx[i];
+        short y = y0 + dy[i];
+        result[i] = Position{x, y};
     }
 
-    // std::rotate(result.begin(), result.begin() + 1, result.end());
     return result;
 }
 

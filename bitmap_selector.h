@@ -10,7 +10,7 @@ struct DayOfYear {
         : day{ month * 32 + day_of_month} { }
     constexpr DayOfYear(const struct tm& time)
         : DayOfYear{ time.tm_mon + 1, time.tm_mday } { }
-    bool operator==(const DayOfYear&) const = default;
+    bool operator==(const DayOfYear& other) const { return day == other.day; };
 };
 
 const unsigned char* bitmaps_weekdays_light[] {

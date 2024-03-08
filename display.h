@@ -1,7 +1,7 @@
-#include "GxEPD2.h"
 #ifndef DISPLAY_H
 #define DISPLAY_H
 
+#include <GxEPD2.h>
 #include <GxEPD2_BW.h>
 #include "config.h"
 
