@@ -10,6 +10,8 @@
 #include "connection.h"
 #include "display.h"
 
+#include "LittleFS.h"
+
 #include <time.h>
 
 void drawClock(const struct tm& now, const Palette& palette) {
@@ -45,16 +47,65 @@ void drawClock(const struct tm& now, const Palette& palette) {
   display.drawCircle(CLOCK_X0, CLOCK_Y0, ring_outer_r, palette.front_color);
 }
 
+void drawBitmapFromFile(File& f, int current_page, int offset) {
+  unsigned char* display_buffer = getDisplayBuffer();
+
+  const int begin_draw_row = current_page * PAGE_HEIGHT;
+  const int end_draw_row   = (current_page + 1) * PAGE_HEIGHT;
+
+  const int begin_bitmap_row = PICTURE_Y0;
+  const int end_bitmap_row   = PICTURE_Y0 + PICTURE_HEIGHT;
+
+  const int begin_copy_row = std::max(begin_draw_row, begin_bitmap_row);
+  const int end_copy_row   = std::min(end_draw_row, end_bitmap_row); 
+
+  const int begin_copy_row_in_bmp = PICTURE_HEIGHT - (end_copy_row - PICTURE_Y0);
+
+  Serial.printf("%d, %d,  %d, %d,  %d, %d,  %d\n\n",
+    begin_draw_row, end_draw_row, begin_bitmap_row, end_bitmap_row,
+    begin_copy_row, end_copy_row, begin_copy_row_in_bmp);
+
+  f.seek(begin_copy_row_in_bmp * PICTURE_WIDTH / 8 + offset);
+
+  for (int h = end_copy_row - 1; h >= begin_copy_row; --h) {
+    
+    unsigned char row[PICTURE_WIDTH / 8];
+    f.readBytes((char*)row, PICTURE_WIDTH / 8);
+    unsigned char* row_buffer = display_buffer + WIDTH / 8 * (h % PAGE_HEIGHT) + PICTURE_X0 / 8;
+
+    if (1) {
+      for (int i = 0; i < PICTURE_WIDTH / 8; ++i) {
+        row_buffer[i] &= row[i];
+      }
+    } else {
+      for (int i = 0; i < PICTURE_WIDTH / 8; ++i) {
+        row_buffer[i] |= row[i];
+      }
+    }
+  }
+}
+
 void drawDisplay(const struct tm& now) {
   Serial.printf_P(PSTR("Drawing display for %02d:%02d\n"), now.tm_hour, now.tm_min);
-  const unsigned char* const bitmap = getBackgroundImage(now);
+  const char* const bitmap_name = getBackgroundImageName(now);
+  File bitmap = LittleFS.open(bitmap_name, "r");
+  
+  bitmap.seek(10);
+  uint32_t data_offset = 0;
+  bitmap.readBytes((char*)&data_offset, 4);
+  bitmap.seek(data_offset);
+    
   const Palette palette = getPalette();
 
+  int current_page = 0;
   display.firstPage();
   do {
     display.fillScreen(palette.background_color);
-    display.drawBitmap(PICTURE_X0, PICTURE_Y0, bitmap, PICTURE_WIDTH, PICTURE_HEIGHT, GxEPD_WHITE, GxEPD_BLACK);
+    // display.drawBitmap(PICTURE_X0, PICTURE_Y0, bitmap, PICTURE_WIDTH, PICTURE_HEIGHT, GxEPD_WHITE, GxEPD_BLACK);
     drawClock(now, palette);
+    drawBitmapFromFile(bitmap, current_page, data_offset);
+    ++current_page;
+    current_page %= PAGE_COUNT;
   } while (display.nextPage());
 
   display.powerOff();
@@ -83,6 +134,8 @@ void setup() {
   // serial is initialized by display init, do NOT init it here explicitly
   display.init(115200, true, 2, false);
   display.setRotation(0);
+
+  LittleFS.begin();
 
   delay(1000);   // for serial initialization
   Serial.println();
@@ -133,6 +186,12 @@ void loop() {
   uint64_t m = micros64();
   uint64_t tv_sec = m / 1000000;
   uint64_t tv_usec = m % 1000000;
+
+  File f = LittleFS.open("test.txt", "r");
+  char buffer[64];
+  f.readBytes(buffer, 63);
+
+  Serial.printf("Read from the file: %s", buffer);
 
   Serial.printf("Printing. tv_sec: %ld, tv_usec: %ld\n", tv_sec, tv_usec);
 
