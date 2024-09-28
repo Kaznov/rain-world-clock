@@ -1,5 +1,4 @@
 #include "config.h"
-#include "slugcats_bitmaps.h"
 
 #include <time.h>
 
@@ -13,82 +12,82 @@ struct DayOfYear {
     bool operator==(const DayOfYear& other) const { return day == other.day; };
 };
 
-const unsigned char* bitmaps_weekdays_light[] {
-    survivor_light,
-    monk_light,
-    hunter_light,
-    gourmand_light,
-    artificer_light,
-    spearmaster_light,
-    rivulet_light,
+const char* bitmaps_weekdays_light[] {
+    "pictures_day/survivor_light.bmp",
+    "pictures_day/monk_light.bmp",
+    "pictures_day/hunter_light.bmp",
+    "pictures_day/gourmand_light.bmp",
+    "pictures_day/artificer_light.bmp",
+    "pictures_day/spearmaster_light.bmp",
+    "pictures_day/rivulet_light.bmp",
 };
 
-const unsigned char* bitmaps_weekdays_sleep_light[] {
-    sleep_survivor_light,
-    sleep_monk_light,
-    sleep_hunter_light,
-    sleep_gourmand_light,
-    sleep_artificer_light,
-    sleep_spearmaster_light,
-    sleep_rivulet_light,
+const char* bitmaps_weekdays_sleep_light[] {
+    "pictures_night/sleep_survivor_light.bmp",
+    "pictures_night/sleep_monk_light.bmp",
+    "pictures_night/sleep_hunter_light.bmp",
+    "pictures_night/sleep_gourmand_light.bmp",
+    "pictures_night/sleep_artificer_light.bmp",
+    "pictures_night/sleep_spearmaster_light.bmp",
+    "pictures_night/sleep_rivulet_light.bmp",
 };
 
-const unsigned char* bitmaps_special_light[] {
-    anniversary_light,
-    bday_light,
-    christmas_light,
-    halloween_light,
-    inv_light,
-    valentine1_light,
-    valentine2_light,
-    valentine3_light,
-    sleep_together_light
+const char* bitmaps_special_light[] {
+    "pictures_special_day/anniversary_light.bmp",
+    "pictures_special_day/bday_light.bmp",
+    "pictures_special_day/christmas_light.bmp",
+    "pictures_special_day/halloween_light.bmp",
+    "pictures_special_day/inv_light.bmp",
+    "pictures_special_day/valentine1_light.bmp",
+    "pictures_special_day/valentine2_light.bmp",
+    "pictures_special_day/valentine3_light.bmp",
+    "pictures_special_day/sleep_together_light.bmp"
 };
 
-const unsigned char* bitmaps_weekdays_dark[] {
-    survivor_dark,
-    monk_dark,
-    hunter_dark,
-    gourmand_dark,
-    artificer_dark,
-    spearmaster_dark,
-    rivulet_dark,
+const char* bitmaps_weekdays_dark[] {
+    "pictures_day/survivor_dark.bmp",
+    "pictures_day/monk_dark.bmp",
+    "pictures_day/hunter_dark.bmp",
+    "pictures_day/gourmand_dark.bmp",
+    "pictures_day/artificer_dark.bmp",
+    "pictures_day/spearmaster_dark.bmp",
+    "pictures_day/rivulet_dark.bmp",
 };
 
-const unsigned char* bitmaps_weekdays_sleep_dark[] {
-    sleep_survivor_dark,
-    sleep_monk_dark,
-    sleep_hunter_dark,
-    sleep_gourmand_dark,
-    sleep_artificer_dark,
-    sleep_spearmaster_dark,
-    sleep_rivulet_dark,
+const char* bitmaps_weekdays_sleep_dark[] {
+    "pictures_night/sleep_survivor_dark.bmp",
+    "pictures_night/sleep_monk_dark.bmp",
+    "pictures_night/sleep_hunter_dark.bmp",
+    "pictures_night/sleep_gourmanddark.bmp",
+    "pictures_night/sleep_artificedark.bmp",
+    "pictures_night/sleep_spearmasdark.bmp",
+    "pictures_night/sleep_rivulet_dark.bmp",
 };
 
-const unsigned char* bitmaps_special_dark[] {
-    anniversary_dark,
-    bday_dark,
-    christmas_dark,
-    halloween_dark,
-    inv_dark,
-    valentine1_dark,
-    valentine2_dark,
-    valentine3_dark,
-    sleep_together_dark
+const char* bitmaps_special_dark[] {
+    "pictures_special_day/anniversary_dark.bmp",
+    "pictures_special_day/bday_dark.bmp",
+    "pictures_special_day/christmas_dark.bmp",
+    "pictures_special_day/halloween_dark.bmp",
+    "pictures_special_day/inv_dark.bmp",
+    "pictures_special_day/valentine1_dark.bmp",
+    "pictures_special_day/valentine2_dark.bmp",
+    "pictures_special_day/valentine3_dark.bmp",
+    "pictures_special_day/sleep_togetherdarkt.bmp"
 };
 
-const unsigned char* getBackgroundImage(struct tm now) {
-    const unsigned char** const bitmaps_weekday
+const char* getBackgroundImageName(struct tm now) {
+    const char** const bitmaps_weekday
         = display_mode == DisplayMode::Light
         ? bitmaps_weekdays_light
         : bitmaps_weekdays_dark;
 
-    const unsigned char** const bitmaps_sleep
+    const char** const bitmaps_sleep
         = display_mode == DisplayMode::Light
         ? bitmaps_weekdays_sleep_light
         : bitmaps_weekdays_sleep_dark;
 
-    const unsigned char** const bitmaps_special
+    const char** const bitmaps_special
         = display_mode == DisplayMode::Light
         ? bitmaps_special_light
         : bitmaps_special_dark;

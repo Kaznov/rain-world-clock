@@ -6,9 +6,11 @@
 #include "config.h"
 
 using DisplayType = GxEPD2_750_T7; // GDEW075T7 800x480, EK79655 (GD7965)
-using Display = GxEPD2_BW < DisplayType, DisplayType::HEIGHT / 2 >;
+static constexpr short PAGE_COUNT = 2;
+static constexpr short PAGE_HEIGHT = DisplayType::HEIGHT / PAGE_COUNT;
+using Display = GxEPD2_BW < DisplayType, PAGE_HEIGHT>;
 Display display(DisplayType(/*CS=D8*/ SS, DC_PIN, RST_PIN, BUSY_PIN));
-using DisplayBufferType = uint8_t[DisplayType::WIDTH * DisplayType::HEIGHT / 8 / 2];
+using DisplayBufferType = uint8_t[DisplayType::WIDTH * PAGE_HEIGHT / 8];
 
 static_assert(DisplayType::WIDTH == WIDTH);
 static_assert(DisplayType::HEIGHT == HEIGHT);
