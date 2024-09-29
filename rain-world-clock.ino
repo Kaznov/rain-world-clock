@@ -47,38 +47,43 @@ void drawClock(const struct tm& now, const Palette& palette) {
   display.drawCircle(CLOCK_X0, CLOCK_Y0, ring_outer_r, palette.front_color);
 }
 
-void drawBitmapFromFile(File& f, int current_page, int offset) {
+void drawBitmapFromFile(BitmapFile& bmp, int current_page, int x_center, int y_center) {
   unsigned char* display_buffer = getDisplayBuffer();
+
+  const int picture_x0 = x_center - bmp.width / 2;
+  const int picture_y0 = y_center - bmp.height / 2;
+
+  Serial.printf("%d, %d,  %d, %d,\n\n", bmp.width, bmp.height, picture_x0, picture_y0);
 
   const int begin_draw_row = current_page * PAGE_HEIGHT;
   const int end_draw_row   = (current_page + 1) * PAGE_HEIGHT;
 
-  const int begin_bitmap_row = PICTURE_Y0;
-  const int end_bitmap_row   = PICTURE_Y0 + PICTURE_HEIGHT;
+  const int begin_bitmap_row = picture_y0;
+  const int end_bitmap_row   = picture_y0 + bmp.height;
 
   const int begin_copy_row = std::max(begin_draw_row, begin_bitmap_row);
   const int end_copy_row   = std::min(end_draw_row, end_bitmap_row); 
 
-  const int begin_copy_row_in_bmp = PICTURE_HEIGHT - (end_copy_row - PICTURE_Y0);
+  const int begin_copy_row_in_bmp = bmp.height - (end_copy_row - picture_y0);
 
   Serial.printf("%d, %d,  %d, %d,  %d, %d,  %d\n\n",
     begin_draw_row, end_draw_row, begin_bitmap_row, end_bitmap_row,
     begin_copy_row, end_copy_row, begin_copy_row_in_bmp);
 
-  f.seek(begin_copy_row_in_bmp * PICTURE_WIDTH / 8 + offset);
+  bmp.f.seek(begin_copy_row_in_bmp * bmp.width / 8 + bmp.data_offset);
 
   for (int h = end_copy_row - 1; h >= begin_copy_row; --h) {
     
-    unsigned char row[PICTURE_WIDTH / 8];
-    f.readBytes((char*)row, PICTURE_WIDTH / 8);
-    unsigned char* row_buffer = display_buffer + WIDTH / 8 * (h % PAGE_HEIGHT) + PICTURE_X0 / 8;
+    unsigned char row[MAX_PICTURE_WIDTH / 8];
+    bmp.f.readBytes((char*)row, bmp.width / 8);
+    unsigned char* row_buffer = display_buffer + WIDTH / 8 * (h % PAGE_HEIGHT) + picture_x0 / 8;
 
     if (1) {
-      for (int i = 0; i < PICTURE_WIDTH / 8; ++i) {
+      for (int i = 0; i < bmp.width / 8; ++i) {
         row_buffer[i] &= row[i];
       }
     } else {
-      for (int i = 0; i < PICTURE_WIDTH / 8; ++i) {
+      for (int i = 0; i < bmp.width / 8; ++i) {
         row_buffer[i] |= row[i];
       }
     }
@@ -87,14 +92,10 @@ void drawBitmapFromFile(File& f, int current_page, int offset) {
 
 void drawDisplay(const struct tm& now) {
   Serial.printf_P(PSTR("Drawing display for %02d:%02d\n"), now.tm_hour, now.tm_min);
-  const char* const bitmap_name = getBackgroundImageName(now);
-  File bitmap = LittleFS.open(bitmap_name, "r");
-  
-  bitmap.seek(10);
-  uint32_t data_offset = 0;
-  bitmap.readBytes((char*)&data_offset, 4);
-  bitmap.seek(data_offset);
-    
+  std::optional<BitmapFile> bitmap = getBackgroundImage(now);
+
+  if (!bitmap) { return; }
+
   const Palette palette = getPalette();
 
   int current_page = 0;
@@ -103,7 +104,7 @@ void drawDisplay(const struct tm& now) {
     display.fillScreen(palette.background_color);
     // display.drawBitmap(PICTURE_X0, PICTURE_Y0, bitmap, PICTURE_WIDTH, PICTURE_HEIGHT, GxEPD_WHITE, GxEPD_BLACK);
     drawClock(now, palette);
-    drawBitmapFromFile(bitmap, current_page, data_offset);
+    drawBitmapFromFile(*bitmap, current_page, CLOCK_X0, CLOCK_Y0);
     ++current_page;
     current_page %= PAGE_COUNT;
   } while (display.nextPage());

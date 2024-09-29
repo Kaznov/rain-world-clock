@@ -9,8 +9,8 @@ char day_query[64] = "";
 constexpr short HEIGHT = 480;
 constexpr short WIDTH = 800;
 
-constexpr short PICTURE_WIDTH = 288;  // size of the prepared bitmaps
-constexpr short PICTURE_HEIGHT = 288; // size of the prepared bitmaps
+constexpr int MAX_PICTURE_WIDTH = 320;
+constexpr int MAX_PICTURE_HEIGHT = 320;
 
 constexpr short CLOCK_WIDTH = HEIGHT;
 constexpr short CLOCK_HEIGHT = HEIGHT;
@@ -24,9 +24,6 @@ constexpr short HOURS_CIRCLE_OUTER_R = 29;
 constexpr short HOURS_CIRCLE_INNER_R = 25;
 constexpr short MINUTES_CIRCLE_OUTER_R = 7;
 constexpr short MINUTES_CIRCLE_INNER_R = 3;
-
-constexpr short PICTURE_X0 = CLOCK_X0 - PICTURE_WIDTH / 2;
-constexpr short PICTURE_Y0 = CLOCK_Y0 - PICTURE_HEIGHT / 2;
 
 constexpr short DC_PIN = 4;     // D2
 constexpr short RST_PIN = 2;    // D4

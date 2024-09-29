@@ -1,8 +1,11 @@
 #include "config.h"
 
 #include <time.h>
+#include <LittleFS.h>
 
-// This struct is only used for selecting special day bitmaps 
+#include <optional>
+
+// This struct is only used for selecting special day bitmaps
 struct DayOfYear {
     unsigned short day;
     constexpr DayOfYear(unsigned short month, unsigned short day_of_month)
@@ -106,7 +109,7 @@ const char* getBackgroundImageName(struct tm now) {
         return bitmaps_sleep[weekday];
     }
 
-    DayOfYear day_of_year = DayOfYear(now);    
+    DayOfYear day_of_year = DayOfYear(now);
 
     static constexpr DayOfYear special_days[] {
         DayOfYear(3, 28),   // rain world anniversary
@@ -125,4 +128,35 @@ const char* getBackgroundImageName(struct tm now) {
     }
 
     return bitmaps_weekday[weekday];
+}
+
+struct BitmapFile {
+    File f;
+    uint32_t width;
+    uint32_t height;
+    uint32_t data_offset;
+};
+
+std::optional<BitmapFile> getBackgroundImage(struct tm now) {
+    const char* bitmap_name = getBackgroundImageName(now);
+    File bitmap = LittleFS.open(bitmap_name, "r");
+
+    bitmap.seek(10);
+    uint32_t data_offset = 0;
+    bitmap.readBytes((char*)&data_offset, 4);
+    bitmap.seek(data_offset);
+
+    bitmap.seek(18);
+    uint32_t width = 0;
+    uint32_t height = 0;
+    bitmap.readBytes((char*)&width, 4);
+    bitmap.readBytes((char*)&height, 4);
+
+    bitmap.seek(28);
+    uint16_t bits_per_pixel = 0;
+    bitmap.readBytes((char*)&bits_per_pixel, 2);
+
+    // TODO: check width, height, bpp, size of the file, alignemt of width to 16
+    // Have meaningful error messages
+    return { BitmapFile{.f = std::move(bitmap), .width = width, .height = height, .data_offset = data_offset} };
 }
