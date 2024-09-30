@@ -1,0 +1,12 @@
+{
+    "wifi_ssid": "YOUR_WIFI_SSID",
+    "wifi_password": "YOUR_WIFI_PASSWORD",
+
+    "location": "NAME_OF_YOUR_CITY_OR_NEIGHBOURHOOD",
+
+    "wakeup_time": "7:00",
+    "sleep_time": "22:00",
+
+    "day_dark_mode": false,
+    "night_dark_mode": false
+}

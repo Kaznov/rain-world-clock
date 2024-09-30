@@ -1,0 +1,36 @@
+{
+    "DD/MM < replace this with your birthday!": {
+        "dark": "bday_dark.bmp",
+        "light": "bday_light.bmp"
+    },
+
+    "14/02": {
+        "dark": "valentine1_dark.bmp",
+        "light": "valentine1_light.bmp"
+    },
+
+    "15/03": {
+        "dark": "sleep_together_dark.bmp",
+        "light": "sleep_together_light.bmp"
+    },
+
+    "28/03": {
+        "dark": "anniversary_dark.bmp",
+        "light": "anniversary_light.bmp"
+    },
+
+    "01/04": {
+        "dark": "inv_dark.bmp",
+        "light": "inv_light.bmp"
+    },
+
+    "31/10": {
+        "dark": "halloween_dark.bmp",
+        "light": "halloween_light.bmp"
+    },
+
+    "25/12": {
+        "dark": "christmas_dark.bmp",
+        "light": "christmas_light.bmp"
+    }
+}

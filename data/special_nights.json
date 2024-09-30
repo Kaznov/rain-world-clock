@@ -1,0 +1,11 @@
+{
+    "15/03": {
+        "dark": "sleep_together_dark.bmp",
+        "light": "sleep_together_light.bmp"
+    },
+
+    "01/04": {
+        "dark": "sleep_inv_dark.bmp",
+        "light": "sleep_inv_light.bmp"
+    }
+}

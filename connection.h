@@ -20,14 +20,14 @@ void configNTP() {
     });
 
     // These addresses are not copied, they need to be in static memory!
-    configTime(timezone, "pool.ntp.org", "time.nist.gov", "time.google.com");
+    configTime(config.timezone, "pool.ntp.org", "time.nist.gov", "time.google.com");
 }
 
 void createQuery() {
     day_query[0] = '\0';
     strcat_P(day_query, day_api);
     strcat_P(day_query, PSTR("/?q="));
-    strcat(day_query, location);
+    strlcat(day_query, config.location, sizeof(day_query));
 }
 
 void getLocalDataFromServer() {
@@ -40,7 +40,9 @@ void getLocalDataFromServer() {
     http.useHTTP10(true);
     Serial.println(F("Connecting with day data server..."));
     Serial.printf_P(PSTR("[HTTP] query: %s\n"), day_query);
+
     Serial.println(F("[HTTP] begin..."));
+
     if (!http.begin(wifiClient, day_query)) {
         Serial.println(F("[HTTP] Unable to connect"));
         return;
@@ -58,10 +60,10 @@ void getLocalDataFromServer() {
     // HTTP header has been send and Server response header has been handled
     Serial.printf_P(PSTR("[HTTP] GET successful, code: %d\n"), httpCode);
 
-    StaticJsonDocument<512> doc;
+    DynamicJsonDocument doc(512);
     DeserializationError error = deserializeJson(doc, http.getStream());
     http.end();
-    
+
     if (error) {
         Serial.print(F("deserializeJson() failed: "));
         Serial.println(error.f_str());
@@ -70,10 +72,10 @@ void getLocalDataFromServer() {
 
     const char* tz = doc["tz"];
     if (tz != nullptr) {
-        strcpy(timezone, tz);
+        strlcpy(config.timezone, tz, sizeof(config.timezone));
     }
 
-    Serial.printf_P(PSTR("Timezone: %s\n"), timezone);
+    Serial.printf_P(PSTR("Timezone: %s\n"), config.timezone);
 
     auto ampmFormatToMinutes = [](const char* time_str) -> short {
         if (strlen(time_str) != 8) return 0;
