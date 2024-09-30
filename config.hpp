@@ -40,6 +40,9 @@ struct UserConfiguration {
     char location[64] = "";
     char timezone[64] = "";
 
+    bool manual_timezone = false;
+    bool skip_weather_data = false;
+
     int wakeup_time = 7*60;    // slugcat wakes up
     int sleep_time = 22*60;    // slugcat goes to sleep
 

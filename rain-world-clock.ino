@@ -132,14 +132,16 @@ void setup() {
   Serial.println();
   Serial.println(F("Rain World Clock startup..."));
 
+  // Reads WiFi settings, information about location/timezone if provided
   readConfig();
 
+  // Connects to WiFi, keeps the connection on
   connectToWiFi();
 
   // This function sets both timezone, as well as info about the day/weather
-  getLocalDataFromServer();
+  updateLocalDataFromServer();
 
-  // Configs the NTP servers
+  // Configs the NTP servers, keeps the time updated
   configNTP();
 
   // Manual time set, for debugging
@@ -164,29 +166,12 @@ void loop() {
     display.setPartialWindow(0, 0, display.width(), display.height());
   }
 
-  uint64_t m = micros64();
-  uint64_t tv_sec = m / 1000000;
-  uint64_t tv_usec = m % 1000000;
-
-  Serial.printf("Printing. tv_sec: %ld, tv_usec: %ld\n", tv_sec, tv_usec);
-
   last = now;
   drawDisplay(now_local);
 
   if (now_local.tm_min == 0) {
-    // Update weather info and timezone every hour
-    char old_timezone[sizeof(config.timezone)];
-    strcpy(old_timezone, config.timezone);
-    getLocalDataFromServer();
-    if (strcmp(old_timezone, config.timezone) != 0) {
-      configNTP();
-    }
+    updateLocalDataFromServer();
   }
-
-  m = micros64();
-  tv_sec = m / 1000000;
-  tv_usec = m % 1000000;
-  Serial.printf("Finished. tv_sec: %ld, tv_usec: %ld\n", tv_sec, tv_usec);
 
   delayUntilNextMinute();
 }

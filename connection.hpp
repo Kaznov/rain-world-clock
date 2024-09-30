@@ -23,13 +23,10 @@ struct MeteoData {
     short moon_illumination;
 };
 
-struct ServerInfo {
-    char timezone[48];
-    MeteoData meteo_data;
-};
+extern MeteoData meteo_data;
 
 void connectToWiFi();
 void configNTP();
-std::optional<ServerInfo> getLocalDataFromServer();
+void updateLocalDataFromServer();
 
 #endif  // RWCLOCK_CONNECTION_HPP_

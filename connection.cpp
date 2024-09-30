@@ -8,11 +8,12 @@
 
 #include <ctime>
 
+MeteoData meteo_data;
+
 static ESP8266WiFiMulti WiFiMulti;
 static char day_query[80] = "";
 
-void connectToWiFi()
-{
+void connectToWiFi() {
   WiFi.mode(WIFI_STA);
   WiFiMulti.addAP(config.wifi_ssid, config.wifi_password);
 
@@ -28,8 +29,7 @@ void connectToWiFi()
   }
 }
 
-void configNTP()
-{
+void configNTP() {
     Serial.println(F("[NTP] Updating NTP config"));
 
     settimeofday_cb([]() {
@@ -47,7 +47,11 @@ static void createQuery() {
     strlcat(day_query, config.location, sizeof(day_query));
 }
 
-std::optional<ServerInfo> getLocalDataFromServer() {
+void updateLocalDataFromServer() {
+    if (config.location[0] == '\0') {
+        return;
+    }
+
     if (day_query[0] == '\0') {
         createQuery();
     }
@@ -62,7 +66,7 @@ std::optional<ServerInfo> getLocalDataFromServer() {
 
     if (!http.begin(wifiClient, day_query)) {
         Serial.println(F("[HTTP] Unable to connect"));
-        return std::nullopt;
+        return;
     }
 
     int httpCode = http.GET();
@@ -72,7 +76,7 @@ std::optional<ServerInfo> getLocalDataFromServer() {
         Serial.printf_P(PSTR("[HTTP] GET... failed, error: %d %s\n"),
                       httpCode,
                       http.errorToString(httpCode).c_str());
-        return std::nullopt;
+        return;
     }
     // HTTP header has been send and Server response header has been handled
     Serial.printf_P(PSTR("[HTTP] GET successful, code: %d\n"), httpCode);
@@ -84,17 +88,18 @@ std::optional<ServerInfo> getLocalDataFromServer() {
     if (error) {
         Serial.print(F("deserializeJson() failed: "));
         Serial.println(error.f_str());
-        return std::nullopt;
+        return;
     }
-
-    ServerInfo info;
 
     const char* tz = doc["tz"];
-    if (tz != nullptr) {
-        strlcpy(info.timezone, tz, sizeof(info.timezone));
-    }
+    if (tz != nullptr              // there is timezone data
+        && !config.manual_timezone // automatic timezone mode
+        && strcmp(tz, config.timezone) != 0) { // there was a change (DST?)
+        strlcpy(config.timezone, tz, sizeof(config.timezone));
+        configNTP();
 
-    Serial.printf_P(PSTR("Timezone: %s\n"), config.timezone);
+        Serial.printf_P(PSTR("Timezone changed to: %s\n"), config.timezone);
+    }
 
     auto ampmFormatToMinutes = [](const char* time_str) -> short {
         if (strlen(time_str) != 8) return 0;
@@ -104,7 +109,7 @@ std::optional<ServerInfo> getLocalDataFromServer() {
         return (short)(hours * 60 + minutes);
     };
 
-    info.meteo_data = {
+    meteo_data = {
         .temp_now =         doc[F("current_temp_c")],
         .weather_now =      doc[F("current_condition_code")],
         .temp_today =       doc[F("today_max_temp_c")],
@@ -117,7 +122,7 @@ std::optional<ServerInfo> getLocalDataFromServer() {
         .sunset =   ampmFormatToMinutes(doc[F("sunset")])
     };
 
-    const MeteoData& meteo = info.meteo_data;
+    const MeteoData& meteo = meteo_data;
 
     Serial.printf_P(PSTR("Temp now:            %dC\n"), meteo.temp_now);
     Serial.printf_P(PSTR("Weather ID now:      %d\n"), meteo.weather_now);
@@ -132,6 +137,4 @@ std::optional<ServerInfo> getLocalDataFromServer() {
     Serial.printf_P(PSTR("Sunset:  %02d:%02d\n"), meteo.sunset / 60, meteo.sunset % 60);
 
     Serial.println(F("Day data from server collected"));
-
-    return info;
 }

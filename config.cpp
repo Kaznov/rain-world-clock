@@ -5,6 +5,8 @@
 
 UserConfiguration config;
 
+static constexpr int WPA_KEY_MIN_LENGTH = 8;
+
 static const char* readJsonElementText(const JsonDocument& doc, const char* key) {
   const char* value = doc[key].as<const char*>();
   if (value == nullptr) {
@@ -66,16 +68,42 @@ void readConfig() {
   }
 
   const char* wifi_ssid = readJsonElementText(doc, "wifi_ssid");
+  if (!wifi_ssid) {
+    return;
+  }
   strlcpy(config.wifi_ssid, wifi_ssid, sizeof(config.wifi_ssid));
 
   const char* wifi_password = readJsonElementText(doc, "wifi_password");
+  if (!wifi_password) {
+    return;
+  }
+  if (strlen(wifi_password) < WPA_KEY_MIN_LENGTH) {
+    return;
+  }
   strlcpy(config.wifi_password, wifi_password, sizeof(config.wifi_password));
 
   const char* location = readJsonElementText(doc, "location");
-  strlcpy(config.location, location, sizeof(config.location));
+  if (location) {
+    strlcpy(config.location, location, sizeof(config.location));
+  }
 
-  config.wakeup_time = readJsonElementTime(doc, "wakeup_time");
-  config.sleep_time = readJsonElementTime(doc, "sleep_time");
+  const char* timezone = readJsonElementText(doc, "timezone");
+  if (timezone) {
+    strlcpy(config.timezone, timezone, sizeof(config.timezone));
+    config.manual_timezone = true;
+  }
+
+  int wakeup_time = readJsonElementTime(doc, "wakeup_time");
+  if (wakeup_time != -1) {
+    config.wakeup_time = wakeup_time;
+  }
+
+  int sleep_time = readJsonElementTime(doc, "sleep_time");
+  if (sleep_time != -1) {
+    config.sleep_time = sleep_time;
+  }
+
+  // These two return false on missing values, no need for extra checks
 
   config.day_mode = readJsonElementBoolean(doc, "day_dark_mode")
     ? DisplayMode::Dark
