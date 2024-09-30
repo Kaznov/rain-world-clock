@@ -35,18 +35,6 @@ const char* bitmaps_weekdays_sleep_light[] {
     "pictures_night/sleep_rivulet_light.bmp",
 };
 
-const char* bitmaps_special_light[] {
-    "pictures_special_day/anniversary_light.bmp",
-    "pictures_special_day/bday_light.bmp",
-    "pictures_special_day/christmas_light.bmp",
-    "pictures_special_day/halloween_light.bmp",
-    "pictures_special_day/inv_light.bmp",
-    "pictures_special_day/valentine1_light.bmp",
-    "pictures_special_day/valentine2_light.bmp",
-    "pictures_special_day/valentine3_light.bmp",
-    "pictures_special_day/sleep_together_light.bmp"
-};
-
 const char* bitmaps_weekdays_dark[] {
     "pictures_day/survivor_dark.bmp",
     "pictures_day/monk_dark.bmp",
@@ -67,18 +55,6 @@ const char* bitmaps_weekdays_sleep_dark[] {
     "pictures_night/sleep_rivulet_dark.bmp",
 };
 
-const char* bitmaps_special_dark[] {
-    "pictures_special_day/anniversary_dark.bmp",
-    "pictures_special_day/bday_dark.bmp",
-    "pictures_special_day/christmas_dark.bmp",
-    "pictures_special_day/halloween_dark.bmp",
-    "pictures_special_day/inv_dark.bmp",
-    "pictures_special_day/valentine1_dark.bmp",
-    "pictures_special_day/valentine2_dark.bmp",
-    "pictures_special_day/valentine3_dark.bmp",
-    "pictures_special_day/sleep_togetherdarkt.bmp"
-};
-
 const char* getBackgroundImageName(struct tm now) {
     const char** const bitmaps_weekday
         = display_mode == DisplayMode::Light
@@ -90,15 +66,10 @@ const char* getBackgroundImageName(struct tm now) {
         ? bitmaps_weekdays_sleep_light
         : bitmaps_weekdays_sleep_dark;
 
-    const char** const bitmaps_special
-        = display_mode == DisplayMode::Light
-        ? bitmaps_special_light
-        : bitmaps_special_dark;
-
     int minutes_into_day = now.tm_hour * 60 + now.tm_min;
 
-    bool is_sleep = minutes_into_day < DAY_TIME || minutes_into_day >= NIGHT_TIME;
-    if (minutes_into_day < DAY_TIME) {
+    bool is_sleep = minutes_into_day < config.wakeup_time || minutes_into_day >= config.sleep_time;
+    if (minutes_into_day < config.wakeup_time) {
         // the slugcat from the previous day is still sleeping, adjust date to yesterday
         now.tm_mday -= 1;
         mktime(&now); // normalize the date
@@ -107,24 +78,6 @@ const char* getBackgroundImageName(struct tm now) {
     int weekday = (now.tm_wday + 6) % 7; // monday == 0
     if (is_sleep) {
         return bitmaps_sleep[weekday];
-    }
-
-    DayOfYear day_of_year = DayOfYear(now);
-
-    static constexpr DayOfYear special_days[] {
-        DayOfYear(3, 28),   // rain world anniversary
-        DayOfYear(bday_month, bday_day_of_month), // birthday
-        DayOfYear(12, 25),  // christmas
-        DayOfYear(10, 31),  // halloween
-        DayOfYear(4, 1),    // prima aprilis, inv
-        DayOfYear(3, 15),   // sleep day
-        DayOfYear(2, 14)    // valentine
-    };
-
-    for (std::size_t i = 0; i < array_size(special_days); ++i) {
-        if (day_of_year == special_days[i]) {
-            return bitmaps_special[i];
-        }
     }
 
     return bitmaps_weekday[weekday];
@@ -139,6 +92,7 @@ struct BitmapFile {
 
 std::optional<BitmapFile> getBackgroundImage(struct tm now) {
     const char* bitmap_name = getBackgroundImageName(now);
+    Serial.printf_P(PSTR("Loading Background bitmap: %s\n"), bitmap_name);
     File bitmap = LittleFS.open(bitmap_name, "r");
 
     bitmap.seek(10);

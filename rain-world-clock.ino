@@ -66,14 +66,9 @@ void drawBitmapFromFile(BitmapFile& bmp, int current_page, int x_center, int y_c
 
   const int begin_copy_row_in_bmp = bmp.height - (end_copy_row - picture_y0);
 
-  Serial.printf("%d, %d,  %d, %d,  %d, %d,  %d\n\n",
-    begin_draw_row, end_draw_row, begin_bitmap_row, end_bitmap_row,
-    begin_copy_row, end_copy_row, begin_copy_row_in_bmp);
-
   bmp.f.seek(begin_copy_row_in_bmp * bmp.width / 8 + bmp.data_offset);
 
   for (int h = end_copy_row - 1; h >= begin_copy_row; --h) {
-    
     unsigned char row[MAX_PICTURE_WIDTH / 8];
     bmp.f.readBytes((char*)row, bmp.width / 8);
     unsigned char* row_buffer = display_buffer + WIDTH / 8 * (h % PAGE_HEIGHT) + picture_x0 / 8;
@@ -90,10 +85,90 @@ void drawBitmapFromFile(BitmapFile& bmp, int current_page, int x_center, int y_c
   }
 }
 
+const char* readJsonElementText(const JsonDocument& doc, const char* key) {
+  const char* value = doc[key].as<const char*>();
+  if (value == nullptr) {
+    return {};
+  }
+
+  Serial.printf_P(PSTR("Read JSON value: %s: %s\n"), key, value);
+  return value;
+}
+
+int readJsonElementTime(const JsonDocument& doc, const char* key) {
+  const char* time_value = doc[key].as<const char*>();
+  if (time_value == nullptr) {
+    return -1;
+  }
+
+  Serial.printf_P(PSTR("Read JSON value: %s: %s\n"), key, time_value);
+
+  int hour = -1, minute = -1;
+  sscanf(time_value, "%2d:%2d", &hour, &minute);
+
+  Serial.printf_P(PSTR("Hour, minutes: %d: %d\n"), hour, minute);
+
+  if (hour < 0 || minute < 0 || hour >= 24 || minute >= 60) {
+    return -1;
+  }
+
+  return hour * 60 + minute;
+}
+
+bool readJsonElementBoolean(const JsonDocument& doc, const char* key) {
+  bool is_boolean = doc[key].is<bool>();
+
+  if (is_boolean == false) {
+    return false;
+  }
+
+  bool value = doc[key].as<bool>();
+  Serial.printf_P(PSTR("Read JSON value: %s: %s\n"), key, (value ? "true" : "false"));
+
+  return value;
+}
+
+void readConfig() {
+  File config_file = LittleFS.open("config.json", "r");
+
+  if (!config_file) {
+    Serial.printf_P(PSTR("Can't open config file\n"));
+    return;
+  }
+
+  DynamicJsonDocument doc(512);
+  DeserializationError error = deserializeJson(doc, config_file);
+  config_file.close();
+
+  if (error) {
+    Serial.printf_P(PSTR("Can't load config\n"));
+    return;
+  }
+
+  const char* wifi_ssid = readJsonElementText(doc, "wifi_ssid");
+  strlcpy(config.wifi_ssid, wifi_ssid, sizeof(config.wifi_ssid));
+
+  const char* wifi_password = readJsonElementText(doc, "wifi_password");
+  strlcpy(config.wifi_password, wifi_password, sizeof(config.wifi_password));
+
+  const char* location = readJsonElementText(doc, "location");
+  strlcpy(config.location, location, sizeof(config.location));
+
+  config.wakeup_time = readJsonElementTime(doc, "wakeup_time");
+  config.sleep_time = readJsonElementTime(doc, "sleep_time");
+
+  config.day_mode = readJsonElementBoolean(doc, "day_dark_mode")
+    ? DisplayMode::Dark
+    : DisplayMode::Light;
+
+  config.night_mode = readJsonElementBoolean(doc, "night_dark_mode")
+    ? DisplayMode::Dark
+    : DisplayMode::Light;
+}
+
 void drawDisplay(const struct tm& now) {
   Serial.printf_P(PSTR("Drawing display for %02d:%02d\n"), now.tm_hour, now.tm_min);
   std::optional<BitmapFile> bitmap = getBackgroundImage(now);
-
   if (!bitmap) { return; }
 
   const Palette palette = getPalette();
@@ -142,11 +217,13 @@ void setup() {
   Serial.println();
   Serial.println(F("Startup..."));
 
+  readConfig();
+
   WiFi.mode(WIFI_STA);
-  WiFiMulti.addAP(ssid, password);
+  WiFiMulti.addAP(config.wifi_ssid, config.wifi_password);
 
   Serial.println(F("[WiFi] Connecting..."));
-  
+
   // wait for WiFi connection, 10s
   wl_status_t wifi_connect_result = WiFiMulti.run(10000);
 
@@ -188,12 +265,6 @@ void loop() {
   uint64_t tv_sec = m / 1000000;
   uint64_t tv_usec = m % 1000000;
 
-  File f = LittleFS.open("test.txt", "r");
-  char buffer[64];
-  f.readBytes(buffer, 63);
-
-  Serial.printf("Read from the file: %s", buffer);
-
   Serial.printf("Printing. tv_sec: %ld, tv_usec: %ld\n", tv_sec, tv_usec);
 
   last = now;
@@ -201,10 +272,10 @@ void loop() {
 
   if (now_local.tm_min == 0) {
     // Update weather info and timezone every hour
-    char old_timezone[64];
-    strcpy(old_timezone, timezone);
+    char old_timezone[sizeof(config.timezone)];
+    strcpy(old_timezone, config.timezone);
     getLocalDataFromServer();
-    if (strcmp(old_timezone, timezone) != 0) {
+    if (strcmp(old_timezone, config.timezone) != 0) {
       configNTP();
     }
   }
