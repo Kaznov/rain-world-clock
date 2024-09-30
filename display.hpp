@@ -3,15 +3,17 @@
 
 #include <GxEPD2.h>
 #include <GxEPD2_BW.h>
-#include "config.h"
+
+#include "config.hpp"
 
 using DisplayType = GxEPD2_750_T7; // GDEW075T7 800x480, EK79655 (GD7965)
 static constexpr short PAGE_COUNT = 2;
 static constexpr short PAGE_HEIGHT = DisplayType::HEIGHT / PAGE_COUNT;
 using Display = GxEPD2_BW < DisplayType, PAGE_HEIGHT>;
-Display display(DisplayType(/*CS=D8*/ SS, DC_PIN, RST_PIN, BUSY_PIN));
 using DisplayBufferType = uint8_t[DisplayType::WIDTH * PAGE_HEIGHT / 8];
 constexpr int DISPLAY_BUFFER_SIZE = sizeof(DisplayBufferType);
+
+extern Display display;
 
 static_assert(DisplayType::WIDTH == WIDTH);
 static_assert(DisplayType::HEIGHT == HEIGHT);
@@ -50,7 +52,7 @@ inline unsigned char* getDisplayBuffer() {
     return display.*result<BufferTypeWrapper>::ptr;
 }
 
-void fillCircle(short x0, short y0, short r, unsigned short color) {
+inline void fillCircle(short x0, short y0, short r, unsigned short color) {
     if (color == GxEPD_WHITE || color == GxEPD_BLACK) {
         display.fillCircle(x0, y0, r, GxEPD_WHITE);
     }
@@ -73,22 +75,21 @@ struct Palette {
     unsigned short background_color;
 };
 
-Palette getPalette() {
-    if (display_mode == DisplayMode::Dark) {
-        return {
-            .front_color = GxEPD_WHITE,
-            .detail_color = GxEPD_WHITE, // grey causes visual issues with display!
-            .background_color = GxEPD_BLACK
-        };
-    }
-    else {
+inline Palette getPalette() {
+    // if (display_mode == DisplayMode::Dark) {
+    //     return {
+    //         .front_color = GxEPD_WHITE,
+    //         .detail_color = GxEPD_WHITE, // grey causes visual issues with display!
+    //         .background_color = GxEPD_BLACK
+    //     };
+    // }
+    // else {
         return {
             .front_color = GxEPD_BLACK, 
             .detail_color = GxEPD_DARKGREY,
             .background_color = GxEPD_WHITE
         };
-    }
+    // }
 }
-
 
 #endif

@@ -3,6 +3,7 @@
     "wifi_password": "YOUR_WIFI_PASSWORD",
 
     "location": "NAME_OF_YOUR_CITY_OR_NEIGHBOURHOOD",
+    "timezone": "CET-1CEST,M3.5.0/02,M10.5.0/03",
 
     "wakeup_time": "7:00",
     "sleep_time": "22:00",

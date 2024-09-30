@@ -1,10 +1,11 @@
-#ifndef CLOCK_COORDINATES_H
-#define CLOCK_COORDINATES_H
+#ifndef RWCLOCK_CLOCK_COORDINATES_HPP_
+#define RWCLOCK_CLOCK_COORDINATES_HPP_
 
 #include <array>
 #include <cmath>
 
-#include "display.h"
+#include "config.hpp"
+#include "display.hpp"
 
 struct Position {
     short x;
@@ -49,4 +50,4 @@ constexpr std::array<Position, 12> hour_circles_positions
 constexpr std::array<Position, 60> minutes_circles_positions
     = get_positions_on_circle<60>(CLOCK_R_MINUTES, CLOCK_X0, CLOCK_Y0);
 
-#endif
+#endif  // RWCLOCK_CLOCK_COORDINATES_HPP_

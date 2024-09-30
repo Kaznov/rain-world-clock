@@ -1,18 +1,35 @@
-#ifndef CONNECTION_H
-#define CONNECTION_H
-
-#include "config.h"
+#include "connection.hpp"
+#include "config.hpp"
 
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WiFiMulti.h>
 #include <ESP8266HTTPClient.h>
 
-#include <time.h>
+#include <ctime>
 
-ESP8266WiFiMulti WiFiMulti;
+static ESP8266WiFiMulti WiFiMulti;
+static char day_query[80] = "";
 
-void configNTP() {
+void connectToWiFi()
+{
+  WiFi.mode(WIFI_STA);
+  WiFiMulti.addAP(config.wifi_ssid, config.wifi_password);
+
+  Serial.println(F("[WiFi] Connecting..."));
+
+  // wait for WiFi connection, 10s
+  wl_status_t wifi_connect_result = WiFiMulti.run(10000);
+
+  if (wifi_connect_result != WL_CONNECTED) {
+    Serial.printf_P(PSTR("[WiFi] Unable to connect, error: %d\n\n"), wifi_connect_result);
+  } else {
+    Serial.println(F("[WiFi] Connected"));
+  }
+}
+
+void configNTP()
+{
     Serial.println(F("[NTP] Updating NTP config"));
 
     settimeofday_cb([]() {
@@ -23,14 +40,14 @@ void configNTP() {
     configTime(config.timezone, "pool.ntp.org", "time.nist.gov", "time.google.com");
 }
 
-void createQuery() {
+static void createQuery() {
     day_query[0] = '\0';
     strcat_P(day_query, day_api);
     strcat_P(day_query, PSTR("/?q="));
     strlcat(day_query, config.location, sizeof(day_query));
 }
 
-void getLocalDataFromServer() {
+std::optional<ServerInfo> getLocalDataFromServer() {
     if (day_query[0] == '\0') {
         createQuery();
     }
@@ -45,7 +62,7 @@ void getLocalDataFromServer() {
 
     if (!http.begin(wifiClient, day_query)) {
         Serial.println(F("[HTTP] Unable to connect"));
-        return;
+        return std::nullopt;
     }
 
     int httpCode = http.GET();
@@ -55,24 +72,26 @@ void getLocalDataFromServer() {
         Serial.printf_P(PSTR("[HTTP] GET... failed, error: %d %s\n"),
                       httpCode,
                       http.errorToString(httpCode).c_str());
-        return;
+        return std::nullopt;
     }
     // HTTP header has been send and Server response header has been handled
     Serial.printf_P(PSTR("[HTTP] GET successful, code: %d\n"), httpCode);
 
-    DynamicJsonDocument doc(512);
+    StaticJsonDocument<512> doc;
     DeserializationError error = deserializeJson(doc, http.getStream());
     http.end();
 
     if (error) {
         Serial.print(F("deserializeJson() failed: "));
         Serial.println(error.f_str());
-        return;
+        return std::nullopt;
     }
+
+    ServerInfo info;
 
     const char* tz = doc["tz"];
     if (tz != nullptr) {
-        strlcpy(config.timezone, tz, sizeof(config.timezone));
+        strlcpy(info.timezone, tz, sizeof(info.timezone));
     }
 
     Serial.printf_P(PSTR("Timezone: %s\n"), config.timezone);
@@ -85,8 +104,7 @@ void getLocalDataFromServer() {
         return (short)(hours * 60 + minutes);
     };
 
-    day_data = DayData {
-        .timestamp = time(nullptr),
+    info.meteo_data = {
         .temp_now =         doc[F("current_temp_c")],
         .weather_now =      doc[F("current_condition_code")],
         .temp_today =       doc[F("today_max_temp_c")],
@@ -99,19 +117,21 @@ void getLocalDataFromServer() {
         .sunset =   ampmFormatToMinutes(doc[F("sunset")])
     };
 
-    Serial.printf_P(PSTR("Temp now:            %dC\n"), day_data.temp_now);
-    Serial.printf_P(PSTR("Weather ID now:      %d\n"), day_data.weather_now);
-    Serial.printf_P(PSTR("Temp today:          %dC\n"), day_data.temp_today);
-    Serial.printf_P(PSTR("Weather ID today:    %d\n"), day_data.weather_today);
-    Serial.printf_P(PSTR("Temp tonight:        %dC\n"), day_data.temp_tonight);
-    Serial.printf_P(PSTR("Weather ID tonight:  %d\n"), day_data.weather_tonight);
-    Serial.printf_P(PSTR("Temp tomorrow:       %dC\n"), day_data.temp_tomorrow);
-    Serial.printf_P(PSTR("Weather ID tomorrow: %d\n"), day_data.weather_tomorrow);
+    const MeteoData& meteo = info.meteo_data;
 
-    Serial.printf_P(PSTR("Sunrise: %02d:%02d\n"), day_data.sunrise / 60, day_data.sunrise % 60);
-    Serial.printf_P(PSTR("Sunset:  %02d:%02d\n"), day_data.sunset / 60, day_data.sunset % 60);
+    Serial.printf_P(PSTR("Temp now:            %dC\n"), meteo.temp_now);
+    Serial.printf_P(PSTR("Weather ID now:      %d\n"), meteo.weather_now);
+    Serial.printf_P(PSTR("Temp today:          %dC\n"), meteo.temp_today);
+    Serial.printf_P(PSTR("Weather ID today:    %d\n"), meteo.weather_today);
+    Serial.printf_P(PSTR("Temp tonight:        %dC\n"), meteo.temp_tonight);
+    Serial.printf_P(PSTR("Weather ID tonight:  %d\n"), meteo.weather_tonight);
+    Serial.printf_P(PSTR("Temp tomorrow:       %dC\n"), meteo.temp_tomorrow);
+    Serial.printf_P(PSTR("Weather ID tomorrow: %d\n"), meteo.weather_tomorrow);
+
+    Serial.printf_P(PSTR("Sunrise: %02d:%02d\n"), meteo.sunrise / 60, meteo.sunrise % 60);
+    Serial.printf_P(PSTR("Sunset:  %02d:%02d\n"), meteo.sunset / 60, meteo.sunset % 60);
 
     Serial.println(F("Day data from server collected"));
-}
 
-#endif
+    return info;
+}

@@ -1,21 +1,6 @@
-#include "config.h"
+#include "bitmap_selector.hpp"
 
-#include <time.h>
-#include <LittleFS.h>
-
-#include <optional>
-
-// This struct is only used for selecting special day bitmaps
-struct DayOfYear {
-    unsigned short day;
-    constexpr DayOfYear(unsigned short month, unsigned short day_of_month)
-        : day{ month * 32 + day_of_month} { }
-    constexpr DayOfYear(const struct tm& time)
-        : DayOfYear{ time.tm_mon + 1, time.tm_mday } { }
-    bool operator==(const DayOfYear& other) const { return day == other.day; };
-};
-
-const char* bitmaps_weekdays_light[] {
+static const char* const bitmaps_weekdays_light[] {
     "pictures_day/survivor_light.bmp",
     "pictures_day/monk_light.bmp",
     "pictures_day/hunter_light.bmp",
@@ -25,7 +10,7 @@ const char* bitmaps_weekdays_light[] {
     "pictures_day/rivulet_light.bmp",
 };
 
-const char* bitmaps_weekdays_sleep_light[] {
+static const char* const bitmaps_weekdays_sleep_light[] {
     "pictures_night/sleep_survivor_light.bmp",
     "pictures_night/sleep_monk_light.bmp",
     "pictures_night/sleep_hunter_light.bmp",
@@ -35,7 +20,7 @@ const char* bitmaps_weekdays_sleep_light[] {
     "pictures_night/sleep_rivulet_light.bmp",
 };
 
-const char* bitmaps_weekdays_dark[] {
+static const char* const bitmaps_weekdays_dark[] {
     "pictures_day/survivor_dark.bmp",
     "pictures_day/monk_dark.bmp",
     "pictures_day/hunter_dark.bmp",
@@ -45,7 +30,7 @@ const char* bitmaps_weekdays_dark[] {
     "pictures_day/rivulet_dark.bmp",
 };
 
-const char* bitmaps_weekdays_sleep_dark[] {
+static const char* const bitmaps_weekdays_sleep_dark[] {
     "pictures_night/sleep_survivor_dark.bmp",
     "pictures_night/sleep_monk_dark.bmp",
     "pictures_night/sleep_hunter_dark.bmp",
@@ -56,13 +41,13 @@ const char* bitmaps_weekdays_sleep_dark[] {
 };
 
 const char* getBackgroundImageName(struct tm now) {
-    const char** const bitmaps_weekday
-        = display_mode == DisplayMode::Light
+    const char* const* const bitmaps_weekday
+        = config.day_mode == DisplayMode::Light
         ? bitmaps_weekdays_light
         : bitmaps_weekdays_dark;
 
-    const char** const bitmaps_sleep
-        = display_mode == DisplayMode::Light
+    const char* const* const bitmaps_sleep
+        = config.night_mode == DisplayMode::Light
         ? bitmaps_weekdays_sleep_light
         : bitmaps_weekdays_sleep_dark;
 
@@ -82,13 +67,6 @@ const char* getBackgroundImageName(struct tm now) {
 
     return bitmaps_weekday[weekday];
 }
-
-struct BitmapFile {
-    File f;
-    uint32_t width;
-    uint32_t height;
-    uint32_t data_offset;
-};
 
 std::optional<BitmapFile> getBackgroundImage(struct tm now) {
     const char* bitmap_name = getBackgroundImageName(now);
@@ -114,3 +92,4 @@ std::optional<BitmapFile> getBackgroundImage(struct tm now) {
     // Have meaningful error messages
     return { BitmapFile{.f = std::move(bitmap), .width = width, .height = height, .data_offset = data_offset} };
 }
+
