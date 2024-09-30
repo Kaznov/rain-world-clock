@@ -132,6 +132,10 @@ void setup() {
   Serial.println();
   Serial.println(F("Rain World Clock startup..."));
 
+  if (!LittleFS.begin()) {
+    return;
+  }
+
   // Reads WiFi settings, information about location/timezone if provided
   readConfig();
 

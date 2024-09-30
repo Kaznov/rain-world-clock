@@ -44,7 +44,50 @@ static void createQuery() {
     day_query[0] = '\0';
     strcat_P(day_query, day_api);
     strcat_P(day_query, PSTR("/?q="));
-    strlcat(day_query, config.location, sizeof(day_query));
+
+    //strlcat(day_query, config.location, sizeof(day_query));
+    // Unfortunately, URI needs some characters escaped.
+    // We only escape the few most common here
+
+    int i = strlen(day_query);
+    int size = sizeof(day_query);
+    for (char* next = config.location; *next; ++next) {
+        switch (*next)
+        {
+        case ' ':
+        case '#':
+        case '$':
+        case '%':
+        case '&':
+        case '+':
+        case ',':
+        case '/':
+        case ':':
+        case ';':
+        case '<':
+        case '=':
+        case '>':
+        case '?':
+        case '@':
+        case '[':
+        case '\\':
+        case ']':
+        case '^':
+        case '`':
+        case '{':
+        case '|':
+        case '}':
+        case '~':
+            if (i + 3 >= size) { return; }
+            sprintf(day_query + i, "%%%X", *next);
+            i += 3;
+            break;
+
+        default:
+            if (i + 1 >= size) { return; }
+            day_query[i++] = *next;
+        }
+    }
 }
 
 void updateLocalDataFromServer() {
