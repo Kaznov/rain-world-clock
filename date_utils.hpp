@@ -1,6 +1,9 @@
 #ifndef RWCLOCK_DAY_UTILS_HPP_
 #define RWCLOCK_DAY_UTILS_HPP_
 
+extern "C"
+int _gettimeofday_r(struct _reent* unused, struct timeval *tp, void *tzp);
+
 struct DayOfYear {
     unsigned short day;
     constexpr DayOfYear(unsigned short month, unsigned short day_of_month)

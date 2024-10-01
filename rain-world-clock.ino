@@ -8,6 +8,7 @@
 #include "clock_coordinates.hpp"
 #include "config.hpp"
 #include "connection.hpp"
+#include "date_utils.hpp"
 #include "display.hpp"
 
 #include <time.h>
@@ -50,8 +51,6 @@ void drawBitmapFromFile(BitmapFile& bmp, int current_page, int x_center, int y_c
 
   const int picture_x0 = x_center - bmp.width / 2;
   const int picture_y0 = y_center - bmp.height / 2;
-
-  Serial.printf("%d, %d,  %d, %d,\n\n", bmp.width, bmp.height, picture_x0, picture_y0);
 
   const int begin_draw_row = current_page * PAGE_HEIGHT;
   const int end_draw_row   = (current_page + 1) * PAGE_HEIGHT;
@@ -110,15 +109,13 @@ void delayUntilNextMinute() {
   // const unsigned ms_left = ms_in_minute - (unsigned)(millis % ms_in_minute);
   // delay(ms_left);
 
-  uint64_t m = micros64();
+  struct timeval tv{};
+  _gettimeofday_r(nullptr, &tv, nullptr);
 
-  uint64_t tv_sec = m / 1000000;
-  uint64_t tv_usec = m % 1000000;
+  Serial.printf("Delay. tv_sec: %lld, tv_usec: %lld\n", tv.tv_sec, tv.tv_usec);
 
-  Serial.printf("Delay. tv_sec: %ld, tv_usec: %ld\n", tv_sec, tv_usec);
-
-  auto s = 60 - (int)(tv_sec % 60) - 1;
-  const auto ms = 1000 - (int)(tv_usec / 1000);
+  auto s = 60 - (int)(tv.tv_sec % 60) - 1;
+  const auto ms = 1000 - (int)(tv.tv_usec / 1000);
 
   delay(1000 * s + ms);
 }
