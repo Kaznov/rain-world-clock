@@ -113,3 +113,10 @@ void readConfig() {
     ? DisplayMode::Dark
     : DisplayMode::Light;
 }
+
+DisplayMode getCurrentDisplayMode(const tm & now)
+{
+    int minutes_into_day = now.tm_hour * 60 + now.tm_min;
+    bool is_sleep = minutes_into_day < config.wakeup_time || minutes_into_day >= config.sleep_time;
+    return is_sleep ? config.night_mode : config.day_mode;
+}

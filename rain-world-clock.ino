@@ -46,7 +46,7 @@ void drawClock(const struct tm& now, const Palette& palette) {
   display.drawCircle(CLOCK_X0, CLOCK_Y0, ring_outer_r, palette.front_color);
 }
 
-void drawBitmapFromFile(BitmapFile& bmp, int current_page, int x_center, int y_center) {
+void drawBitmapFromFile(BitmapFile& bmp, int current_page, int x_center, int y_center, Palette p) {
   unsigned char* display_buffer = getDisplayBuffer();
 
   const int picture_x0 = x_center - bmp.width / 2;
@@ -70,7 +70,7 @@ void drawBitmapFromFile(BitmapFile& bmp, int current_page, int x_center, int y_c
     bmp.f.readBytes((char*)row, bmp.width / 8);
     unsigned char* row_buffer = display_buffer + WIDTH / 8 * (h % PAGE_HEIGHT) + picture_x0 / 8;
 
-    if (1) {
+    if (p.background_color == GxEPD_WHITE) {
       for (int i = 0; i < bmp.width / 8; ++i) {
         row_buffer[i] &= row[i];
       }
@@ -84,10 +84,13 @@ void drawBitmapFromFile(BitmapFile& bmp, int current_page, int x_center, int y_c
 
 void drawDisplay(const struct tm& now) {
   Serial.printf_P(PSTR("Drawing display for %02d:%02d\n"), now.tm_hour, now.tm_min);
+
   std::optional<BitmapFile> bitmap = getBackgroundImage(now);
   if (!bitmap) { return; }
 
-  const Palette palette = getPalette();
+  const Palette palette = getCurrentDisplayMode(now) == DisplayMode::Dark
+    ? DARK_PALETTE
+    : LIGHT_PALETTE;
 
   int current_page = 0;
   display.firstPage();
@@ -95,7 +98,7 @@ void drawDisplay(const struct tm& now) {
     display.fillScreen(palette.background_color);
     // display.drawBitmap(PICTURE_X0, PICTURE_Y0, bitmap, PICTURE_WIDTH, PICTURE_HEIGHT, GxEPD_WHITE, GxEPD_BLACK);
     drawClock(now, palette);
-    drawBitmapFromFile(*bitmap, current_page, CLOCK_X0, CLOCK_Y0);
+    drawBitmapFromFile(*bitmap, current_page, CLOCK_X0, CLOCK_Y0, palette);
     ++current_page;
     current_page %= PAGE_COUNT;
   } while (display.nextPage());
@@ -104,11 +107,6 @@ void drawDisplay(const struct tm& now) {
 }
 
 void delayUntilNextMinute() {
-  // static constexpr unsigned ms_in_minute = 60'000;
-  // const uint64_t millis = micros64() / 1000;
-  // const unsigned ms_left = ms_in_minute - (unsigned)(millis % ms_in_minute);
-  // delay(ms_left);
-
   struct timeval tv{};
   _gettimeofday_r(nullptr, &tv, nullptr);
 

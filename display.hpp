@@ -75,21 +75,16 @@ struct Palette {
     unsigned short background_color;
 };
 
-inline Palette getPalette() {
-    // if (display_mode == DisplayMode::Dark) {
-    //     return {
-    //         .front_color = GxEPD_WHITE,
-    //         .detail_color = GxEPD_WHITE, // grey causes visual issues with display!
-    //         .background_color = GxEPD_BLACK
-    //     };
-    // }
-    // else {
-        return {
-            .front_color = GxEPD_BLACK, 
-            .detail_color = GxEPD_DARKGREY,
-            .background_color = GxEPD_WHITE
-        };
-    // }
-}
+constexpr Palette DARK_PALETTE = {
+    .front_color = GxEPD_WHITE,
+    .detail_color = GxEPD_WHITE,
+    .background_color = GxEPD_BLACK
+};
+
+constexpr Palette LIGHT_PALETTE = {
+    .front_color = GxEPD_BLACK,
+    .detail_color = GxEPD_DARKGREY,
+    .background_color = GxEPD_WHITE
+};
 
 #endif

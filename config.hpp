@@ -53,5 +53,6 @@ struct UserConfiguration {
 extern UserConfiguration config;
 
 void readConfig();
+DisplayMode getCurrentDisplayMode(const struct tm&);
 
 #endif  // RWCLOCK_CONFIG_HPP_
