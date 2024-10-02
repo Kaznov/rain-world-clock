@@ -14,10 +14,10 @@
 #include <time.h>
 
 void drawClock(const struct tm& now, const Palette& palette) {
-  const std::size_t now_h = (std::size_t)now.tm_hour % 12;
-  const std::size_t now_m = (std::size_t)now.tm_min;
+  const int now_h = now.tm_hour % 12;
+  const int now_m = now.tm_min;
 
-  for (std::size_t h = now_h; h < 12; ++h) {
+  for (int h = now_h; h < 12; ++h) {
     const auto [hx, hy] = hour_circles_positions[h];
     fillCircle(hx, hy, HOURS_CIRCLE_OUTER_R, palette.detail_color);
   }
@@ -29,7 +29,7 @@ void drawClock(const struct tm& now, const Palette& palette) {
     fillCircle(now_hx, now_hy, now_hr, palette.background_color);
   }
 
-  for (std::size_t m = now_m; m < 60; ++m) {
+  for (int m = now_m; m < 60; ++m) {
     const auto [mx, my] = minutes_circles_positions[m];
     fillCircle(mx, my, MINUTES_CIRCLE_OUTER_R, palette.detail_color);
   }
