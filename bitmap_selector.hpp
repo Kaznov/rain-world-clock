@@ -15,7 +15,7 @@ struct BitmapFile {
     uint32_t data_offset;
 };
 
-const char* getBackgroundImageName(struct tm now);
 std::optional<BitmapFile> getBackgroundImage(struct tm now);
+void readSpecialBitmapsConfig();
 
 #endif  // RWCLOCK_BITMAP_SELECTOR_HPP_

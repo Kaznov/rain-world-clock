@@ -134,6 +134,9 @@ void setup() {
   // Reads WiFi settings, information about location/timezone if provided
   readConfig();
 
+  // Reads for what days/nights should there be a special background
+  readSpecialBitmapsConfig();
+
   // Connects to WiFi, keeps the connection on
   connectToWiFi();
 
@@ -141,11 +144,11 @@ void setup() {
   updateLocalDataFromServer();
 
   // Configs the NTP servers, keeps the time updated
-  configNTP();
+  // configNTP();
 
   // Manual time set, for debugging
   // struct timeval tv;
-  // tv.tv_sec = 1707906403;
+  // tv.tv_sec = 1707930000; // Feb 14th 2024, 5:00PM GMT+0
   // tv.tv_usec = 0;
   // settimeofday(&tv, nullptr);
 
