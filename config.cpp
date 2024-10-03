@@ -1,4 +1,6 @@
 #include "config.hpp"
+#include "bufref_json.hpp"
+#include "display.hpp"
 
 #include "LittleFS.h"
 #include "ArduinoJson.h"
@@ -58,7 +60,8 @@ void readConfig() {
     return;
   }
 
-  StaticJsonDocument<512> doc;
+
+  BufRefJsonDocument doc((char*)getDisplayBuffer(), DISPLAY_BUFFER_SIZE);
   DeserializationError error = deserializeJson(doc, config_file);
   config_file.close();
 

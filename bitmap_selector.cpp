@@ -1,4 +1,5 @@
 #include "bitmap_selector.hpp"
+#include "bufref_json.hpp"
 #include "date_utils.hpp"
 
 #include <ArduinoJson.h>
@@ -168,7 +169,7 @@ static void readSpecialBitmapsFile(const char* file, std::vector<SpecialEvent>& 
         return;
     }
 
-    StaticJsonDocument<1024> doc;
+    BufRefJsonDocument doc((char*)getDisplayBuffer(), DISPLAY_BUFFER_SIZE);
     DeserializationError error = deserializeJson(doc, special_events_file);
     special_events_file.close();
 

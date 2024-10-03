@@ -144,7 +144,7 @@ void setup() {
   updateLocalDataFromServer();
 
   // Configs the NTP servers, keeps the time updated
-  // configNTP();
+  configNTP();
 
   // Manual time set, for debugging
   // struct timeval tv;

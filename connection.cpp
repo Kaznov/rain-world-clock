@@ -1,5 +1,7 @@
 #include "connection.hpp"
+#include "bufref_json.hpp"
 #include "config.hpp"
+#include "display.hpp"
 
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
@@ -124,7 +126,7 @@ void updateLocalDataFromServer() {
     // HTTP header has been send and Server response header has been handled
     Serial.printf_P(PSTR("[HTTP] GET successful, code: %d\n"), httpCode);
 
-    StaticJsonDocument<512> doc;
+    BufRefJsonDocument doc((char*)getDisplayBuffer(), DISPLAY_BUFFER_SIZE);
     DeserializationError error = deserializeJson(doc, http.getStream());
     http.end();
 
