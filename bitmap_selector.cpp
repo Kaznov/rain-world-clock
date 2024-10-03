@@ -2,6 +2,7 @@
 #include "date_utils.hpp"
 
 #include <ArduinoJson.h>
+#include <vector>
 
 static const char* const bitmaps_weekdays_day_light[] {
     "survivor_light.bmp",
