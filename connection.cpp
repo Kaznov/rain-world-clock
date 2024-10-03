@@ -2,6 +2,7 @@
 #include "bufref_json.hpp"
 #include "config.hpp"
 #include "display.hpp"
+#include "meteo.hpp"
 
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
