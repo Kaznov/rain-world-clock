@@ -52,23 +52,6 @@ inline unsigned char* getDisplayBuffer() {
     return display.*result<BufferTypeWrapper>::ptr;
 }
 
-inline void fillCircle(short x0, short y0, short r, unsigned short color) {
-    if (color == GxEPD_WHITE || color == GxEPD_BLACK) {
-        display.fillCircle(x0, y0, r, GxEPD_WHITE);
-    }
-    else if (color == GxEPD_DARKGREY) {
-        // shade, filling half of pixels black, half white
-        for (short y = y0 - r; y < y0 + r; ++y) {
-            for (short x = x0 - r; x < x0 + r; ++x) {
-                short dx = x - x0;
-                short dy = y - y0;
-                if (dx * dx + dy * dy >= r * r) continue;
-                display.drawPixel(x, y, ((x+y) & 1) ? GxEPD_WHITE : GxEPD_BLACK);
-            }
-        }
-    }
-}
-
 struct Palette {
     unsigned short front_color;
     unsigned short detail_color;

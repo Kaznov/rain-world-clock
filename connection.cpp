@@ -11,8 +11,6 @@
 
 #include <ctime>
 
-MeteoData meteo_data;
-
 static ESP8266WiFiMulti WiFiMulti;
 static char day_query[80] = "";
 

@@ -3,6 +3,7 @@
 #include "date_utils.hpp"
 
 #include <ArduinoJson.h>
+#include <cstdio>
 #include <vector>
 
 static const char* const bitmaps_weekdays_day_light[] {
