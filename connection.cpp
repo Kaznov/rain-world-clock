@@ -182,3 +182,18 @@ void updateLocalDataFromServer() {
 
     Serial.println(F("Day data from server collected"));
 }
+
+bool waitForNTPUpdate(uint32_t ms_timeout)
+{
+    static constexpr time_t START_OF_YEAR_2024 = 1704067200;
+    uint32_t start = millis();
+    while((millis()-start) <= ms_timeout) {
+        time_t now = time(nullptr);
+
+        if(now > START_OF_YEAR_2024){
+            return true;
+        }
+        delay(50);
+    }
+    return false;
+}

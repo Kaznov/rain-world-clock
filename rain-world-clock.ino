@@ -36,6 +36,7 @@ void setup() {
   Serial.println(F("Rain World Clock startup..."));
 
   if (!LittleFS.begin()) {
+    // TODO error
     return;
   }
 
@@ -54,19 +55,18 @@ void setup() {
   // Configs the NTP servers, keeps the time updated
   configNTP();
 
-  // TODO: wait for NTP config by checking time() with timeout, error on failure
-
   // Manual time set, for debugging
   // struct timeval tv;
   // tv.tv_sec = 1707930000; // Feb 14th 2024, 5:00PM GMT+0
   // tv.tv_usec = 0;
   // settimeofday(&tv, nullptr);
 
-  delay(1000);  // Let the NTP process finish
+  if (!waitForNTPUpdate()) {
+    // TODO: error on timeout of NTA
+  }
 }
 
 void loop() {
-  static time_t last = 0;
   time_t now = time(nullptr);
   struct tm now_local {};
   localtime_r(&now, &now_local);
@@ -75,14 +75,13 @@ void loop() {
     updateLocalDataFromServer();
   }
 
-  if (now_local.tm_min % 15 == 0 || abs(now - last) > 120 /*s*/) {
+  if (now_local.tm_min % 15 == 0) {
     // Full update on every quarter or time update from NTP
     display.setFullWindow();
   } else {
     display.setPartialWindow(0, 0, display.width(), display.height());
   }
 
-  last = now;
   drawDisplay(now_local);
 
   delayUntilNextMinute();
