@@ -13,7 +13,7 @@ struct Position {
 };
 
 template <int N>
-constexpr std::array<Position, N> get_positions_on_circle(short r, short x0 = 0, short y0 = 0) {
+constexpr std::array<Position, N> get_positions_on_circle(short r) {
     static_assert(N%4 == 0);
     constexpr int qN = N / 4;
     constexpr double pi = 3.14159265358979323846;
@@ -37,17 +37,15 @@ constexpr std::array<Position, N> get_positions_on_circle(short r, short x0 = 0,
 
     std::array<Position, N> result{};
     for (int i = 0; i < N; ++i) {
-        short x = x0 + dx[i];
-        short y = y0 + dy[i];
-        result[i] = Position{x, y};
+        result[i] = Position{dx[i], dy[i]};
     }
 
     return result;
 }
 
 constexpr std::array<Position, 12> hour_circles_positions
-    = get_positions_on_circle<12>(CLOCK_R_HOURS, CLOCK_X0, CLOCK_Y0);
+    = get_positions_on_circle<12>(CLOCK_R_HOURS);
 constexpr std::array<Position, 60> minutes_circles_positions
-    = get_positions_on_circle<60>(CLOCK_R_MINUTES, CLOCK_X0, CLOCK_Y0);
+    = get_positions_on_circle<60>(CLOCK_R_MINUTES);
 
 #endif  // RWCLOCK_CLOCK_COORDINATES_HPP_

@@ -123,3 +123,14 @@ DisplayMode getCurrentDisplayMode(const tm & now)
     bool is_sleep = minutes_into_day < config.wakeup_time || minutes_into_day >= config.sleep_time;
     return is_sleep ? config.night_mode : config.day_mode;
 }
+
+int clock_x0()
+{
+    return WIDTH / 2;
+    // return config.skip_weather_data ? (WIDTH / 2) : (CLOCK_WIDTH / 2);
+}
+
+int clock_y0()
+{
+    return HEIGHT / 2;
+}

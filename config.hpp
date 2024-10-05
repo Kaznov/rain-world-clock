@@ -13,8 +13,6 @@ constexpr int MAX_PICTURE_HEIGHT = 320;
 
 constexpr int CLOCK_WIDTH = HEIGHT;
 constexpr int CLOCK_HEIGHT = HEIGHT;
-constexpr int CLOCK_X0 = WIDTH / 2;
-constexpr int CLOCK_Y0 = HEIGHT / 2;
 
 constexpr int CLOCK_R_HOURS = 210;
 constexpr int CLOCK_R_MINUTES = 170;
@@ -54,5 +52,8 @@ extern UserConfiguration config;
 
 void readConfig();
 DisplayMode getCurrentDisplayMode(const struct tm&);
+
+int clock_x0();
+int clock_y0();
 
 #endif  // RWCLOCK_CONFIG_HPP_

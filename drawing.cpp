@@ -23,40 +23,40 @@ static void fillCircle(short x0, short y0, short r, unsigned short color) {
     }
 }
 
-void drawClock(const struct tm& now, const Palette& palette) {
+static void drawClock(const struct tm& now, const Palette& palette, short x0, short y0) {
   const int now_h = now.tm_hour % 12;
   const int now_m = now.tm_min;
 
   for (int h = now_h; h < 12; ++h) {
     const auto [hx, hy] = hour_circles_positions[h];
-    fillCircle(hx, hy, HOURS_CIRCLE_OUTER_R, palette.detail_color);
+    fillCircle(hx + x0, hy + y0, HOURS_CIRCLE_OUTER_R, palette.detail_color);
   }
 
   {
     const auto [now_hx, now_hy] = hour_circles_positions[now_h];
     // fill inner proportionally to how much of this hour has already passed
     const short now_hr = HOURS_CIRCLE_INNER_R * now_m / 60;  // < linear in r, not area
-    fillCircle(now_hx, now_hy, now_hr, palette.background_color);
+    fillCircle(now_hx + x0, now_hy + y0, now_hr, palette.background_color);
   }
 
   for (int m = now_m; m < 60; ++m) {
     const auto [mx, my] = minutes_circles_positions[m];
-    fillCircle(mx, my, MINUTES_CIRCLE_OUTER_R, palette.detail_color);
+    fillCircle(mx + x0, my + y0, MINUTES_CIRCLE_OUTER_R, palette.detail_color);
   }
 
   {
     const auto [now_mx, now_my] = minutes_circles_positions[now_m];
-    fillCircle(now_mx, now_my, MINUTES_CIRCLE_INNER_R, palette.background_color);
+    fillCircle(now_mx + x0, now_my + y0, MINUTES_CIRCLE_INNER_R, palette.background_color);
   }
 
   const short ring_inner_r = CLOCK_R_MINUTES - MINUTES_CIRCLE_OUTER_R - 1;
   const short ring_outer_r = CLOCK_R_MINUTES + MINUTES_CIRCLE_OUTER_R + 1;
 
-  display.drawCircle(CLOCK_X0, CLOCK_Y0, ring_inner_r, palette.front_color);
-  display.drawCircle(CLOCK_X0, CLOCK_Y0, ring_outer_r, palette.front_color);
+  display.drawCircle(x0, y0, ring_inner_r, palette.front_color);
+  display.drawCircle(x0, y0, ring_outer_r, palette.front_color);
 }
 
-void drawBitmapFromFile(BitmapFile& bmp, int current_page, int x_center, int y_center, Palette p) {
+static void drawBitmapFromFile(BitmapFile& bmp, int current_page, int x_center, int y_center, Palette p) {
   unsigned char* display_buffer = getDisplayBuffer();
 
   const int picture_x0 = x_center - bmp.width / 2;
@@ -107,8 +107,8 @@ void drawDisplay(const struct tm& now) {
   do {
     display.fillScreen(palette.background_color);
     // display.drawBitmap(PICTURE_X0, PICTURE_Y0, bitmap, PICTURE_WIDTH, PICTURE_HEIGHT, GxEPD_WHITE, GxEPD_BLACK);
-    drawClock(now, palette);
-    drawBitmapFromFile(*bitmap, current_page, CLOCK_X0, CLOCK_Y0, palette);
+    drawClock(now, palette, clock_x0(), clock_y0());
+    drawBitmapFromFile(*bitmap, current_page, clock_x0(), clock_y0(), palette);
     ++current_page;
     current_page %= PAGE_COUNT;
   } while (display.nextPage());
