@@ -11,6 +11,9 @@ constexpr int WIDTH = 800;
 constexpr int MAX_PICTURE_WIDTH = 320;
 constexpr int MAX_PICTURE_HEIGHT = 320;
 
+constexpr int MAX_WEATHER_PICTURE_WIDTH = 200;
+constexpr int MAX_WEATHER_PICTURE_HEIGHT = 200;
+
 constexpr int CLOCK_WIDTH = HEIGHT;
 constexpr int CLOCK_HEIGHT = HEIGHT;
 
@@ -55,5 +58,7 @@ DisplayMode getCurrentDisplayMode(const struct tm&);
 
 int clock_x0();
 int clock_y0();
+int weather_x0();
+int weather_y0();
 
 #endif  // RWCLOCK_CONFIG_HPP_

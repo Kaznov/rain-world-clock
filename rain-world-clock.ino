@@ -71,10 +71,6 @@ void loop() {
   struct tm now_local {};
   localtime_r(&now, &now_local);
 
-  if (now_local.tm_min % 30 == 0) {
-    updateLocalDataFromServer();
-  }
-
   if (now_local.tm_min % 15 == 0) {
     // Full update on every quarter or time update from NTP
     display.setFullWindow();
@@ -83,6 +79,10 @@ void loop() {
   }
 
   drawDisplay(now_local);
+
+  if ((now_local.tm_min + 1) % 30 == 0) {
+    updateLocalDataFromServer();
+  }
 
   delayUntilNextMinute();
 }

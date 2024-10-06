@@ -15,6 +15,7 @@ struct BitmapFile {
     uint32_t data_offset;
 };
 
+std::optional<BitmapFile> loadBitmap(const char* path);
 std::optional<BitmapFile> getBackgroundImage(struct tm now);
 void readSpecialBitmapsConfig();
 

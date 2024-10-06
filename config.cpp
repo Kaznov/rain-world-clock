@@ -124,13 +124,18 @@ DisplayMode getCurrentDisplayMode(const tm & now)
     return is_sleep ? config.night_mode : config.day_mode;
 }
 
-int clock_x0()
-{
-    return WIDTH / 2;
-    // return config.skip_weather_data ? (WIDTH / 2) : (CLOCK_WIDTH / 2);
+int clock_x0() {
+    return config.skip_weather_data ? (WIDTH / 2) : (CLOCK_WIDTH / 2);
 }
 
-int clock_y0()
-{
+int clock_y0() {
+    return HEIGHT / 2;
+}
+
+int weather_x0() {
+  return CLOCK_WIDTH + (WIDTH - CLOCK_WIDTH) / 2;
+}
+
+int weather_y0() {
     return HEIGHT / 2;
 }

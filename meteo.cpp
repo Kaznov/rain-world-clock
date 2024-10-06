@@ -1,8 +1,11 @@
+#include "bitmap_selector.hpp"
 #include "meteo.hpp"
 
 #include <ctime>
 
 MeteoData meteo_data;
+
+static const char* const weather_pictures_directory = "pictures_weather/";
 
 enum WeatherCode {
 	ClearSkies = 1000,
@@ -167,9 +170,9 @@ const char* getWeatherNightIconName(WeatherCode code, bool moon_visible) {
     switch (code)
     {
     case ClearSkies:
-        return moon_visible ? "0d_wi-night-clear.bmp" : "wi-stars.bmp";
+        return moon_visible ? "wi-night-clear.bmp" : "wi-stars.bmp";
 	case PartlyCloudy:
-        return "wi-night-alt-cloudy.bmp";
+        return "wi-night-cloudy.bmp";
     case Cloudy:
         return "2d_wi-cloud.bmp";
 	case Overcast:
@@ -177,14 +180,14 @@ const char* getWeatherNightIconName(WeatherCode code, bool moon_visible) {
 	case Mist:
         return "wi-night-fog.bmp";
 	case PatchyRainPossible:
-        return "wi-night-alt-rain.bmp";
+        return "wi-night-rain.bmp";
 	case PatchySnowPossible:
-        return "wi-night-alt-snow.bmp";
+        return "wi-night-snow.bmp";
 	case PatchySleetPossible:
 	case PatchyFreezingDrizzlePossible:
-        return "wi-night-alt-sleet.bmp";
+        return "wi-night-sleet.bmp";
 	case ThunderyOutbreaksPossible:
-        "wi-night-alt-lightning.bmp";
+        "wi-night-lightning.bmp";
 	case BlowingSnow:
 	case Blizzard:
         "wi-snow-wind.bmp";
@@ -193,29 +196,29 @@ const char* getWeatherNightIconName(WeatherCode code, bool moon_visible) {
         return "wi-fog.bmp";
 	case PatchyLightDrizzle:
 	case LightDrizzle:
-        return "wi-night-alt-sleet.bmp";
+        return "wi-night-sleet.bmp";
 	case FreezingDrizzle:
 	case HeavyFreezingDrizzle:
         return "wi-sleet.bmp";
     case PatchyLightRain:
 	case LightRain:
-        return "wi-night-alt-showers.bmp";
+        return "wi-night-showers.bmp";
 	case ModerateRainAtTimes:
 	case ModerateRain:
-        return "wi-night-alt-rain.bmp";
+        return "wi-night-rain.bmp";
     case HeavyRainAtTimes:
 	case HeavyRain:
         return "wi-rain.bmp";
 	case LightFreezingRain:
 	case ModerateOrHeavyFreezingRain:
 	case LightSleet:
-        return "wi-night-alt-sleet.bmp";
+        return "wi-night-sleet.bmp";
 	case ModerateOrHeavySleet:
         return "wi-sleet.bmp";
     case PatchyLightSnow:
 	case LightSnow:
 	case PatchyModerateSnow:
-        return "wi-night-alt-snow.bmp";
+        return "wi-night-snow.bmp";
 	case ModerateSnow:
 	case PatchyHeavySnow:
 	case HeavySnow:
@@ -223,21 +226,21 @@ const char* getWeatherNightIconName(WeatherCode code, bool moon_visible) {
 	case IcePellets:
         return "wi-hail.bmp";
 	case LightRainShower:
-        return "wi-night-alt-showers.bmp";
+        return "wi-night-showers.bmp";
 	case ModerateOrHeavyRainShower:
         return "wi-showers.bmp";
 	case TorrentialRainShower:
         return "wi-showers.bmp";
 	case LightSleetShowers:
-        return "wi-night-alt-sleet.bmp";
+        return "wi-night-sleet.bmp";
 	case ModerateOrHeavySleetShowers:
         return "wi-sleet.bmp";
 	case LightSnowShowers:
-        return "wi-night-alt-snow.bmp";
+        return "wi-night-snow.bmp";
 	case ModerateOrHeavySnowShowers:
         return "wi-snow.bmp";
 	case LightShowersOfIcePellets:
-        return "wi-night-alt-hail.bmp";
+        return "wi-night-hail.bmp";
 	case ModerateOrHeavyShowersOfIcePellets:
         return "wi-hail.bmp";
 	case PatchyLightRainWithThunder:
@@ -245,10 +248,33 @@ const char* getWeatherNightIconName(WeatherCode code, bool moon_visible) {
 	case ModerateOrHeavyRainWithThunder:
         return "wi-thunderstorm.bmp";
 	case PatchyLightSnowWithThunder:
-        return "wi-night-alt-snow-thunderstorm.bmp";
+        return "wi-night-snow-thunderstorm.bmp";
 	case ModerateOrHeavySnowWithThunder:
         return "wi-snow-thunderstorm.bmp";
     default:
         return "wi-na.bmp";
     }
+}
+
+std::optional<BitmapFile> getWeatherIcon() {
+	bool is_day = meteo_data.is_day;
+	bool moon_visible = getMoonIllumination(meteo_data.timestamp) > 20;
+
+	WeatherCode code = (WeatherCode)meteo_data.weather_now;
+
+	const char* const bmp_name = is_day
+		? getWeatherDayIconName(code)
+		: getWeatherNightIconName(code, moon_visible);
+
+	if (bmp_name == nullptr) {
+		Serial.printf("Can't find the icon for code %d\n", (int)code);
+		return std::nullopt;
+	}
+
+	char path_buffer[64];
+
+	strcpy(path_buffer, weather_pictures_directory);
+	strlcat(path_buffer, bmp_name, sizeof(path_buffer));
+
+	return loadBitmap(path_buffer);
 }

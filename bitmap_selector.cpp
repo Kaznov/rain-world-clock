@@ -61,8 +61,6 @@ struct SpecialEvent {
 static std::vector<SpecialEvent> special_days;
 static std::vector<SpecialEvent> special_nights;
 
-static char path_buffer[64];
-
 static const char* getSpecialBackgroundImageName(DayOfYear doy, bool is_night) {
     auto is_today = [&](const SpecialEvent& e){ return e.doy == doy; };
 
@@ -80,7 +78,55 @@ static const char* getSpecialBackgroundImageName(DayOfYear doy, bool is_night) {
     return nullptr;
 }
 
-static const char* getBackgroundImagePath(struct tm now) {
+std::optional<BitmapFile> loadBitmap(const char* path) {
+    Serial.printf_P(PSTR("Loading bitmap: %s\n"), path);
+    File bitmap = LittleFS.open(path, "r");
+
+    if (!bitmap) {
+        Serial.printf_P(PSTR("Can't open bitmap: %s\n"), path);
+        return std::nullopt;
+    }
+
+    if (bitmap.size() < 32) {
+        Serial.printf_P(PSTR("File too small to be proper bitmap: %s\n"), path);
+        return std::nullopt;
+    }
+
+    bitmap.seek(10);
+    uint32_t data_offset = 0;
+    bitmap.readBytes((char*)&data_offset, 4);
+
+    bitmap.seek(18);
+    uint32_t width = 0;
+    uint32_t height = 0;
+    bitmap.readBytes((char*)&width, 4);
+    bitmap.readBytes((char*)&height, 4);
+
+    if (width > MAX_PICTURE_WIDTH || height > MAX_PICTURE_HEIGHT) {
+        Serial.printf_P(PSTR("Bitmap too big: %s (%d x %d)\n"), path, width, height);
+        return std::nullopt;
+    }
+
+    if (width % 16 != 0) {
+        Serial.printf_P(PSTR("Bitmap needs to have width multiple of 16: %s\n"), path);
+        return std::nullopt;
+    }
+
+    bitmap.seek(28);
+    uint16_t bits_per_pixel = 0;
+    bitmap.readBytes((char*)&bits_per_pixel, 2);
+
+    if (bits_per_pixel != 1) {
+        Serial.printf_P(PSTR("Wrong bitmap format, more than 1 bit per pixel: %s\n"), path);
+        return std::nullopt;
+    }
+
+    // TODO: check width, height, bpp, size of the file, alignemt of width to 16
+    // Have meaningful error messages
+    return { BitmapFile{.f = std::move(bitmap), .width = width, .height = height, .data_offset = data_offset} };
+}
+
+std::optional<BitmapFile> getBackgroundImage(struct tm now) {
     int minutes_into_day = now.tm_hour * 60 + now.tm_min;
 
     bool is_night = minutes_into_day < config.wakeup_time || minutes_into_day >= config.sleep_time;
@@ -110,34 +156,12 @@ static const char* getBackgroundImagePath(struct tm now) {
                 : bitmaps_weekdays_day_dark)[weekday];
     }
 
+    char path_buffer[64];
+
     strlcpy(path_buffer, directory, sizeof(path_buffer));
     strlcat(path_buffer, bitmap_name, sizeof(path_buffer));
-    return path_buffer;
-}
 
-std::optional<BitmapFile> getBackgroundImage(struct tm now) {
-    const char* bitmap_name = getBackgroundImagePath(now);
-    Serial.printf_P(PSTR("Loading Background bitmap: %s\n"), bitmap_name);
-    File bitmap = LittleFS.open(bitmap_name, "r");
-
-    bitmap.seek(10);
-    uint32_t data_offset = 0;
-    bitmap.readBytes((char*)&data_offset, 4);
-    bitmap.seek(data_offset);
-
-    bitmap.seek(18);
-    uint32_t width = 0;
-    uint32_t height = 0;
-    bitmap.readBytes((char*)&width, 4);
-    bitmap.readBytes((char*)&height, 4);
-
-    bitmap.seek(28);
-    uint16_t bits_per_pixel = 0;
-    bitmap.readBytes((char*)&bits_per_pixel, 2);
-
-    // TODO: check width, height, bpp, size of the file, alignemt of width to 16
-    // Have meaningful error messages
-    return { BitmapFile{.f = std::move(bitmap), .width = width, .height = height, .data_offset = data_offset} };
+    return loadBitmap(path_buffer);
 }
 
 static const char* loadNameToPool(const char* name) {

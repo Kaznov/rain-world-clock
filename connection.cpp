@@ -92,12 +92,19 @@ static void createQuery() {
 }
 
 void updateLocalDataFromServer() {
+    config.skip_weather_data = true;
+
     if (config.location[0] == '\0') {
         return;
     }
 
     if (day_query[0] == '\0') {
         createQuery();
+    }
+
+    if (WiFi.status() != WL_CONNECTED) {
+        Serial.println(F("WiFi connection unavailable, cannot receive weather data"));
+        return;
     }
 
     HTTPClient http;
@@ -154,6 +161,8 @@ void updateLocalDataFromServer() {
     };
 
     meteo_data = {
+        .timestamp =        doc[F("timestamp")],
+        .is_day =           doc[F("is_day")],
         .temp_now =         doc[F("current_temp_c")],
         .weather_now =      doc[F("current_condition_code")],
         .temp_today =       doc[F("today_max_temp_c")],
@@ -181,6 +190,8 @@ void updateLocalDataFromServer() {
     Serial.printf_P(PSTR("Sunset:  %02d:%02d\n"), meteo.sunset / 60, meteo.sunset % 60);
 
     Serial.println(F("Day data from server collected"));
+
+    config.skip_weather_data = false;
 }
 
 bool waitForNTPUpdate(unsigned long ms_timeout)

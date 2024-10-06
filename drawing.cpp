@@ -3,6 +3,8 @@
 #include "clock_coordinates.hpp"
 #include "display.hpp"
 #include "drawing.hpp"
+#include "fonts.hpp"
+#include "meteo.hpp"
 
 #include <optional>
 
@@ -56,7 +58,9 @@ static void drawClock(const struct tm& now, const Palette& palette, short x0, sh
   display.drawCircle(x0, y0, ring_outer_r, palette.front_color);
 }
 
-static void drawBitmapFromFile(BitmapFile& bmp, int current_page, int x_center, int y_center, Palette p) {
+static void drawBitmapFromFile(BitmapFile& bmp, int current_page,
+                               int x_center, int y_center,
+                               Palette p, bool invert = false) {
   unsigned char* display_buffer = getDisplayBuffer();
 
   const int picture_x0 = x_center - bmp.width / 2;
@@ -84,19 +88,48 @@ static void drawBitmapFromFile(BitmapFile& bmp, int current_page, int x_center, 
       for (int i = 0; i < bmp.width / 8; ++i) {
         row_buffer[i] &= row[i];
       }
-    } else {
+    } else if (!invert) {
       for (int i = 0; i < bmp.width / 8; ++i) {
         row_buffer[i] |= row[i];
+      }
+    } else {
+      for (int i = 0; i < bmp.width / 8; ++i) {
+        row_buffer[i] &= ~row[i];
       }
     }
   }
 }
 
+static void drawWeather(Palette palette, std::optional<BitmapFile>& icon, int x0, int y0, int current_page) {
+    if (config.skip_weather_data) {
+        return;
+    }
+
+    if (icon) {
+       drawBitmapFromFile(*icon, current_page, weather_x0(), weather_y0(),
+                          palette, palette.front_color == GxEPD_WHITE);
+    }
+
+    display.setFont(&rodondo_digits_64pt);
+    display.setTextColor(palette.front_color);
+
+    char temperature_text[8];
+    snprintf(temperature_text, 8, "%d/:", meteo_data.temp_now);
+
+    int16_t x1 = 0, y1 = 0;
+    uint16_t w = 0, h = 0;
+    display.getTextBounds(&temperature_text[0], 0, 0, &x1, &y1, &w, &h);
+
+    // Serial.printf("Text bounds: %d,%d,%d,%d\n", x1, y1, w, h);
+    display.setCursor(weather_x0() - w / 2, weather_y0() + h + MAX_WEATHER_PICTURE_HEIGHT / 2);
+    display.print(temperature_text);
+}
+
 void drawDisplay(const struct tm& now) {
   Serial.printf_P(PSTR("Drawing display for %02d:%02d\n"), now.tm_hour, now.tm_min);
 
-  std::optional<BitmapFile> bitmap = getBackgroundImage(now);
-  if (!bitmap) { return; }
+  std::optional<BitmapFile> picture = getBackgroundImage(now);
+  std::optional<BitmapFile> weather_icon = getWeatherIcon();
 
   const Palette palette = getCurrentDisplayMode(now) == DisplayMode::Dark
     ? DARK_PALETTE
@@ -108,7 +141,13 @@ void drawDisplay(const struct tm& now) {
     display.fillScreen(palette.background_color);
     // display.drawBitmap(PICTURE_X0, PICTURE_Y0, bitmap, PICTURE_WIDTH, PICTURE_HEIGHT, GxEPD_WHITE, GxEPD_BLACK);
     drawClock(now, palette, clock_x0(), clock_y0());
-    drawBitmapFromFile(*bitmap, current_page, clock_x0(), clock_y0(), palette);
+
+    if (picture) {
+        drawBitmapFromFile(*picture, current_page, clock_x0(), clock_y0(), palette);
+    }
+
+    drawWeather(palette, weather_icon, weather_x0(), weather_y0(), current_page);
+
     ++current_page;
     current_page %= PAGE_COUNT;
   } while (display.nextPage());

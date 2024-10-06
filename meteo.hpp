@@ -1,7 +1,13 @@
 #ifndef RWCLOCK_METEO_HPP_
 #define RWCLOCK_METEO_HPP_
 
+#include <ctime>
+#include <optional>
+
+#include "bitmap_selector.hpp"
+
 struct MeteoData {
+    time_t timestamp;
     bool is_day;
     short temp_now;
     short weather_now;
@@ -22,4 +28,7 @@ struct MeteoData {
 };
 
 extern MeteoData meteo_data;
+
+std::optional<BitmapFile> getWeatherIcon();
+
 #endif  // RWCLOCK_METEO_HPP_
