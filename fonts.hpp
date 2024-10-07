@@ -6,5 +6,6 @@
 
 extern const GFXfont rodondo_digits_64pt;
 extern const GFXfont rodondo_20pt;
+extern const GFXfont free_sans_20pt;
 
 #endif  // RWCLOCK_FONTS_HPP_
