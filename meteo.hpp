@@ -7,6 +7,7 @@
 #include "bitmap_selector.hpp"
 
 struct MeteoData {
+    char location[32];
     time_t timestamp;
     bool is_day;
     short temp_now;

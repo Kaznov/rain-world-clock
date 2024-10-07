@@ -38,7 +38,7 @@ struct UserConfiguration {
     char wifi_ssid[WL_SSID_MAX_LENGTH + 1] = "";
     char wifi_password[WL_WPA_KEY_MAX_LENGTH + 1] = "";
 
-    char location[64] = "";
+    char location[32] = "";
     char timezone[64] = "";
 
     bool manual_timezone = false;

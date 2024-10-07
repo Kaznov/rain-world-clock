@@ -175,6 +175,10 @@ void updateLocalDataFromServer() {
         .sunset =   ampmFormatToMinutes(doc[F("sunset")])
     };
 
+    const char* location = doc["location"];
+    location = location ?: config.location;
+    strlcpy(meteo_data.location, location, sizeof(meteo_data.location));
+
     const MeteoData& meteo = meteo_data;
 
     Serial.printf_P(PSTR("Temp now:            %dC\n"), meteo.temp_now);

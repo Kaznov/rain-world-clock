@@ -10,7 +10,7 @@
 
 static void fillCircle(short x0, short y0, short r, unsigned short color) {
     if (color == GxEPD_WHITE || color == GxEPD_BLACK) {
-        display.fillCircle(x0, y0, r, GxEPD_WHITE);
+        display.fillCircle(x0, y0, r, color);
     }
     else if (color == GxEPD_DARKGREY) {
         // shade, filling half of pixels black, half white
@@ -19,7 +19,7 @@ static void fillCircle(short x0, short y0, short r, unsigned short color) {
                 short dx = x - x0;
                 short dy = y - y0;
                 if (dx * dx + dy * dy >= r * r) continue;
-                display.drawPixel(x, y, ((x+y) & 1) ? GxEPD_WHITE : GxEPD_BLACK);
+                display.drawPixel(x, y, (x % 3 + y % 3) ? GxEPD_BLACK : GxEPD_WHITE);
             }
         }
     }
@@ -94,7 +94,7 @@ static void drawBitmapFromFile(BitmapFile& bmp, int current_page,
       }
     } else {
       for (int i = 0; i < bmp.width / 8; ++i) {
-        row_buffer[i] &= ~row[i];
+        row_buffer[i] |= ~row[i];
       }
     }
   }
@@ -118,11 +118,35 @@ static void drawWeather(Palette palette, std::optional<BitmapFile>& icon, int x0
 
     int16_t x1 = 0, y1 = 0;
     uint16_t w = 0, h = 0;
-    display.getTextBounds(&temperature_text[0], 0, 0, &x1, &y1, &w, &h);
+    display.getTextBounds(temperature_text, 0, 0, &x1, &y1, &w, &h);
 
     // Serial.printf("Text bounds: %d,%d,%d,%d\n", x1, y1, w, h);
     display.setCursor(weather_x0() - w / 2, weather_y0() + h + MAX_WEATHER_PICTURE_HEIGHT / 2);
     display.print(temperature_text);
+
+    display.setFont(&rodondo_20pt);
+    display.setCursor(16, 32);
+    display.getTextBounds(meteo_data.location, 0, 0, &x1, &y1, &w, &h);
+    display.setCursor(weather_x0() - w / 2, weather_y0() - h / 2 - MAX_WEATHER_PICTURE_HEIGHT / 2);
+    display.print(meteo_data.location);
+}
+
+void diffuseWeather(Palette palette) {
+  unsigned char* display_buffer = getDisplayBuffer();
+
+  if (palette.background_color == GxEPD_WHITE) {
+    for (int y = 0; y < PAGE_HEIGHT; y += 4) {
+      for (int x = HEIGHT / 8; x < WIDTH / 8; ++x) {
+        display_buffer[(y + 3) * WIDTH / 8 + x] |= 0b00010001;
+      }
+    }
+  } else {
+    for (int y = 0; y < PAGE_HEIGHT; y += 4) {
+      for (int x = HEIGHT / 8; x < WIDTH / 8; ++x) {
+        display_buffer[(y + 3) * WIDTH / 8 + x] &= 0b11101110;
+      }
+    }
+  }
 }
 
 void drawDisplay(const struct tm& now) {
@@ -139,7 +163,6 @@ void drawDisplay(const struct tm& now) {
   display.firstPage();
   do {
     display.fillScreen(palette.background_color);
-    // display.drawBitmap(PICTURE_X0, PICTURE_Y0, bitmap, PICTURE_WIDTH, PICTURE_HEIGHT, GxEPD_WHITE, GxEPD_BLACK);
     drawClock(now, palette, clock_x0(), clock_y0());
 
     if (picture) {
@@ -147,6 +170,7 @@ void drawDisplay(const struct tm& now) {
     }
 
     drawWeather(palette, weather_icon, weather_x0(), weather_y0(), current_page);
+    diffuseWeather(palette);
 
     ++current_page;
     current_page %= PAGE_COUNT;

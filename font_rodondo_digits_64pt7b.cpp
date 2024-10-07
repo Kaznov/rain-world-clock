@@ -1,6 +1,3 @@
-#ifndef RWCLOCK_FONT_RODONDO_DIGITS_64PT7B_HPP_
-#define RWCLOCK_FONT_RODONDO_DIGITS_64PT7B_HPP_
-
 #include <sys/pgmspace.h>
 #include "fonts.hpp"
 
@@ -475,5 +472,3 @@ const GFXfont rodondo_digits_64pt PROGMEM = {
   0x2E, 0x3B, 80 };
 
 // Approx. 5468 bytes
-
-#endif  //RWCLOCK_FONT_RODONDO_DIGITS_64PT7B_HPP_
